@@ -13,7 +13,7 @@ public class DBConnection {
     private static Connection getConnection(){
         String url = "jdbc:mysql://localhost:3306/aposample_db";
         String user = "root";
-        String password = "root";
+        String password = "Revature@123";
         try{
             if(connection == null || connection.isClosed()){
                 connection = DriverManager.getConnection(url, user, password);
@@ -29,3 +29,4 @@ public class DBConnection {
     }
 
 }
+
