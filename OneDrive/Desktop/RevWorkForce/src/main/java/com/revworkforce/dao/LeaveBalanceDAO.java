@@ -1,6 +1,8 @@
 package com.revworkforce.dao;
 
 import com.revworkforce.util.DBConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class LeaveBalanceDAO {
+    private static final Logger logger = LogManager.getLogger(LeaveBalanceDAO.class);
 
     // Get balance for employee
     public Map<String, Integer> getBalance(int employeeId) {
@@ -26,6 +29,7 @@ public class LeaveBalanceDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error retrieving leave balance for empId: {}", employeeId, e);
             e.printStackTrace();
         }
         return balance;
@@ -54,6 +58,7 @@ public class LeaveBalanceDAO {
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
+            logger.error("Error deducting leave for empId: {}", employeeId, e);
             e.printStackTrace();
             return false;
         }
@@ -70,6 +75,7 @@ public class LeaveBalanceDAO {
             ps.setInt(4, employeeId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            logger.error("Error updating balance for empId: {}", employeeId, e);
             e.printStackTrace();
             return false;
         }
@@ -98,6 +104,7 @@ public class LeaveBalanceDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error retrieving team balances for managerId: {}", managerId, e);
             e.printStackTrace();
         }
         return list;

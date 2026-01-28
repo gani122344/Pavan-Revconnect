@@ -15,12 +15,15 @@ import com.revworkforce.service.LeaveService;
 import com.revworkforce.service.NotificationService;
 import com.revworkforce.service.PerformanceService;
 import com.revworkforce.util.InputValidator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class EmployeeController {
+    private static final Logger logger = LogManager.getLogger(EmployeeController.class);
 
     private static final EmployeeService empService = new EmployeeService();
     private static final LeaveService leaveService = new LeaveService();
@@ -31,6 +34,7 @@ public class EmployeeController {
     private static final PerformanceService performanceService = new PerformanceService();
 
     public static void show(Employee emp) {
+        logger.info("Showing Employee Menu for empId: {}", emp.getEmployeeId());
         Scanner sc = new Scanner(System.in);
 
         while (true) {
@@ -58,11 +62,13 @@ public class EmployeeController {
                     case 4 -> handleInfo();
                     case 5 -> handleNotifications(emp);
                     case 0 -> {
+                        logger.info("Employee logged out");
                         return;
                     }
                     default -> System.out.println("Invalid Choice");
                 }
             } catch (Exception e) {
+                logger.error("Error in EmployeeController menu", e);
                 System.out.println("Error: " + e.getMessage());
                 sc.nextLine();
             }

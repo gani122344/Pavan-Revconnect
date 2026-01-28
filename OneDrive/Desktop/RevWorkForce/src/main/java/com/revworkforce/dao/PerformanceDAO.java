@@ -2,6 +2,8 @@ package com.revworkforce.dao;
 
 import com.revworkforce.model.PerformanceReview;
 import com.revworkforce.util.DBConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PerformanceDAO {
+    private static final Logger logger = LogManager.getLogger(PerformanceDAO.class);
 
     // Employee submits review
     public boolean submitReview(PerformanceReview pr) {
@@ -33,6 +36,7 @@ public class PerformanceDAO {
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
+            logger.error("Error submitting review for empId: {}", pr.getEmployeeId(), e);
             e.printStackTrace();
             return false;
         }
@@ -65,6 +69,7 @@ public class PerformanceDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error getting team reviews for managerId: {}", managerId, e);
             e.printStackTrace();
         }
         return list;
@@ -90,6 +95,7 @@ public class PerformanceDAO {
             return updated;
 
         } catch (Exception e) {
+            logger.error("Error giving feedback for reviewId: {}", reviewId, e);
             e.printStackTrace();
             return false;
         }
@@ -115,6 +121,7 @@ public class PerformanceDAO {
                 return pr;
             }
         } catch (Exception e) {
+            logger.error("Error getting review by ID: {}", reviewId, e);
             e.printStackTrace();
         }
         return null;
@@ -144,6 +151,7 @@ public class PerformanceDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error getting employee review for empId: {}", employeeId, e);
             e.printStackTrace();
         }
         return list;

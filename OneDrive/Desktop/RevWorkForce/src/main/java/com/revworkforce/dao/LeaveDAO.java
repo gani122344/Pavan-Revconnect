@@ -2,6 +2,8 @@ package com.revworkforce.dao;
 
 import com.revworkforce.model.Leave;
 import com.revworkforce.util.DBConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 public class LeaveDAO {
+    private static final Logger logger = LogManager.getLogger(LeaveDAO.class);
+
     // Employee applies leave
     public boolean applyLeave(Leave leave) {
 
@@ -33,6 +37,7 @@ public class LeaveDAO {
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
+            logger.error("Error applying leave for empId: {}", leave.getEmployeeId(), e);
             e.printStackTrace();
             return false;
         }
@@ -73,6 +78,7 @@ public class LeaveDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error retrieving pending leaves for managerId: {}", managerId, e);
             e.printStackTrace();
         }
         return list;
@@ -99,6 +105,7 @@ public class LeaveDAO {
             return updated;
 
         } catch (Exception e) {
+            logger.error("Error updating leave status for leaveId: {}", leaveId, e);
             e.printStackTrace();
             return false;
         }
@@ -123,6 +130,7 @@ public class LeaveDAO {
                 return l;
             }
         } catch (Exception e) {
+            logger.error("Error getting leave by ID: {}", leaveId, e);
             e.printStackTrace();
         }
         return null;
@@ -160,6 +168,7 @@ public class LeaveDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error getting leaves for employeeId: {}", employeeId, e);
             e.printStackTrace();
         }
         return list;
@@ -181,6 +190,7 @@ public class LeaveDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error getting leave balance for employeeId: {}", employeeId, e);
             e.printStackTrace();
         }
         return balance;
@@ -221,6 +231,7 @@ public class LeaveDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error getting approved leaves for managerId: {}", managerId, e);
             e.printStackTrace();
         }
         return list;
@@ -237,6 +248,7 @@ public class LeaveDAO {
             ps.setInt(2, employeeId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            logger.error("Error cancelling pending leave for leaveId: {}", leaveId, e);
             e.printStackTrace();
             return false;
         }
@@ -262,6 +274,7 @@ public class LeaveDAO {
                 list.add(map);
             }
         } catch (Exception e) {
+            logger.error("Error getting leave statistics", e);
             e.printStackTrace();
         }
         return list;
@@ -294,6 +307,7 @@ public class LeaveDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error getting team attendance for managerId: {}", managerId, e);
             e.printStackTrace();
         }
         return list;

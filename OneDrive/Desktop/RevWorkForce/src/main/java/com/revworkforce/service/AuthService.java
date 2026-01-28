@@ -3,9 +3,12 @@ package com.revworkforce.service;
 import com.revworkforce.dao.EmployeeDAO;
 import com.revworkforce.model.Employee;
 import com.revworkforce.util.PasswordUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AuthService {
 
+    private static final Logger logger = LogManager.getLogger(AuthService.class);
     private EmployeeDAO employeeDAO;
 
     // Default constructor for normal app usage
@@ -19,11 +22,13 @@ public class AuthService {
     }
 
     public Employee authenticate(int empId, String password) {
+        logger.info("Attempting authentication for user ID: {}", empId);
         String hashedPassword = PasswordUtil.hashPassword(password);
         return employeeDAO.login(empId, hashedPassword);
     }
 
     public String register(Employee emp) {
+        logger.info("Attempting to register new employee with ID: {}", emp.getEmployeeId());
         if ("ADMIN".equalsIgnoreCase(emp.getRole())) {
             int adminCount = employeeDAO.getAdminCount();
             if (adminCount >= 4) {
@@ -50,6 +55,7 @@ public class AuthService {
     }
 
     public boolean resetPassword(int empId, String newPassword) {
+        logger.info("Password reset requested for user ID: {}", empId);
         return employeeDAO.resetPassword(empId, PasswordUtil.hashPassword(newPassword));
     }
 }

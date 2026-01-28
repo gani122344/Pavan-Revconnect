@@ -2,6 +2,8 @@ package com.revworkforce.dao;
 
 import com.revworkforce.model.Goal;
 import com.revworkforce.util.DBConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class GoalDAO {
+    private static final Logger logger = LogManager.getLogger(GoalDAO.class);
 
     // Employee creates goal
     public boolean createGoal(Goal g) {
@@ -35,6 +38,7 @@ public class GoalDAO {
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
+            logger.error("Error creating goal", e);
             e.printStackTrace();
             return false;
         }
@@ -66,6 +70,7 @@ public class GoalDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error retrieving goals for empId: {}", empId, e);
             e.printStackTrace();
         }
         return list;
@@ -90,6 +95,7 @@ public class GoalDAO {
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
+            logger.error("Error updating progress for goalId: {}", goalId, e);
             e.printStackTrace();
             return false;
         }
@@ -121,6 +127,7 @@ public class GoalDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error retrieving team goals for managerId: {}", managerId, e);
             e.printStackTrace();
         }
         return list;

@@ -6,13 +6,17 @@ import com.revworkforce.service.AuthService;
 import com.revworkforce.service.NotificationService;
 import com.revworkforce.util.InputValidator;
 import com.revworkforce.util.PasswordUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Scanner;
 
 public class AuthController {
+    private static final Logger logger = LogManager.getLogger(AuthController.class);
 
     public static boolean show() {
+        logger.info("Showing Auth Menu");
         Scanner sc = new Scanner(System.in);
         AuthService authService = new AuthService();
         NotificationService notificationService = new NotificationService();
@@ -33,8 +37,10 @@ public class AuthController {
             int choice = Integer.parseInt(choiceStr);
 
             if (choice == 0) {
+                logger.info("User chose to exit application");
                 return false; // Exit Application
             } else if (choice == 1) {
+                logger.info("User chose Login");
                 System.out.print("Employee ID: ");
                 if (!sc.hasNextInt()) {
                     System.out.println("ID must be a number.");
@@ -48,8 +54,10 @@ public class AuthController {
                 Employee emp = authService.authenticate(empId, password);
 
                 if (emp != null) {
+                    logger.info("Login successful for empId: {}", empId);
                     processLogin(emp, notificationService);
                 } else {
+                    logger.warn("Login failed for empId: {}", empId);
                     System.out.println("WRONG CREDENTIALS! Please check ID & Pass.");
                 }
             } else if (choice == 2) {
@@ -60,6 +68,7 @@ public class AuthController {
                 System.out.println("Invalid Option. Try again.");
             }
         } catch (Exception e) {
+            logger.error("Error in AuthController", e);
             System.out.println("An error occurred: " + e.getMessage());
             sc.nextLine(); // Clear buffer
         }

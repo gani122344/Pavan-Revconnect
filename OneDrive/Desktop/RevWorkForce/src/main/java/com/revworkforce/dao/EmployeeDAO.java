@@ -3,6 +3,8 @@ package com.revworkforce.dao;
 import com.revworkforce.model.Employee;
 import com.revworkforce.util.DBConnection;
 import com.revworkforce.util.PasswordUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EmployeeDAO {
+
+    private static final Logger logger = LogManager.getLogger(EmployeeDAO.class);
 
     public Employee login(int empId, String password) {
         String sql = """
@@ -44,6 +48,7 @@ public class EmployeeDAO {
             }
 
         } catch (Exception e) {
+            logger.error("Error logging in empId: {}", empId, e);
             e.printStackTrace();
         }
         return null; // Invalid credentials or error
@@ -91,6 +96,7 @@ public class EmployeeDAO {
             return false;
 
         } catch (Exception e) {
+            logger.error("Error adding employee ID: {}", emp.getEmployeeId(), e);
             e.printStackTrace();
             return false;
         }
@@ -103,6 +109,7 @@ public class EmployeeDAO {
             ps.setInt(1, empId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            logger.error("Error deactivating employee ID: {}", empId, e);
             e.printStackTrace();
             return false;
         }
@@ -136,6 +143,7 @@ public class EmployeeDAO {
             ps.setInt(4, empId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            logger.error("Error updating profile for empId: {}", empId, e);
             e.printStackTrace();
             return false;
         }
@@ -160,6 +168,7 @@ public class EmployeeDAO {
             ps.setInt(8, emp.getEmployeeId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            logger.error("Error updating employee details ID: {}", emp.getEmployeeId(), e);
             e.printStackTrace();
             return false;
         }

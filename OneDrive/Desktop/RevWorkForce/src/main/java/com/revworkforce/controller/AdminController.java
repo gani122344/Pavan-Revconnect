@@ -9,6 +9,8 @@ import com.revworkforce.service.HolidayService;
 import com.revworkforce.service.LeaveService;
 import com.revworkforce.service.AuditLogService;
 import com.revworkforce.util.InputValidator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Date;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class AdminController {
+    private static final Logger logger = LogManager.getLogger(AdminController.class);
 
     private static final EmployeeService empService = new EmployeeService();
     private static final HolidayService holidayService = new HolidayService();
@@ -24,6 +27,7 @@ public class AdminController {
     private static final AuditLogService auditLogService = new AuditLogService();
 
     public static void show(Employee admin) {
+        logger.info("Showing Admin Menu for adminId: {}", admin.getEmployeeId());
         Scanner sc = new Scanner(System.in);
 
         while (true) {
@@ -63,12 +67,14 @@ public class AdminController {
                     case 10 -> revokeLeave(sc, admin);
                     case 11 -> generateLeaveReport();
                     case 0 -> {
+                        logger.info("Admin logged out");
                         System.out.println("Logged out");
                         return;
                     }
                     default -> System.out.println("Invalid choice");
                 }
             } catch (Exception e) {
+                logger.error("Error in AdminController menu", e);
                 System.out.println("An unexpected error occurred: " + e.getMessage());
                 sc.nextLine(); // Clear buffer
             }

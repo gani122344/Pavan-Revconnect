@@ -1,6 +1,8 @@
 package com.revworkforce.dao;
 
 import com.revworkforce.util.DBConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +13,8 @@ import java.util.Map;
 
 public class AuditLogDAO {
 
+    private static final Logger logger = LogManager.getLogger(AuditLogDAO.class);
+
     public boolean log(String action, int performedBy, String details) {
         String sql = "INSERT INTO audit_log (action, performed_by, details) VALUES (?, ?, ?)";
         try (Connection con = DBConnection.getConnection();
@@ -20,6 +24,7 @@ public class AuditLogDAO {
             ps.setString(3, details);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            logger.error("Error logging action: {}", action, e);
             e.printStackTrace();
             return false;
         }
@@ -39,6 +44,7 @@ public class AuditLogDAO {
                 list.add(map);
             }
         } catch (Exception e) {
+            logger.error("Error retrieving audit logs", e);
             e.printStackTrace();
         }
         return list;

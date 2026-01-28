@@ -2,6 +2,8 @@ package com.revworkforce.dao;
 
 import com.revworkforce.model.Notification;
 import com.revworkforce.util.DBConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationDAO {
+    private static final Logger logger = LogManager.getLogger(NotificationDAO.class);
 
     // Add notification
     public void addNotification(int employeeId, String message) {
@@ -23,6 +26,7 @@ public class NotificationDAO {
             ps.executeUpdate();
 
         } catch (Exception e) {
+            logger.error("Error adding notification for empId: {}", employeeId, e);
             e.printStackTrace();
         }
     }
@@ -46,6 +50,7 @@ public class NotificationDAO {
                 }
             }
         } catch (Exception e) {
+            logger.error("Error retrieving notifications for empId: {}", employeeId, e);
             e.printStackTrace();
         }
         return list;
@@ -61,6 +66,7 @@ public class NotificationDAO {
             ps.executeUpdate();
 
         } catch (Exception e) {
+            logger.error("Error marking notifications as read for empId: {}", employeeId, e);
             e.printStackTrace();
         }
     }

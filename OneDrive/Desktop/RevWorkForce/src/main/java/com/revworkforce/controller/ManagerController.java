@@ -7,12 +7,15 @@ import com.revworkforce.service.EmployeeService;
 import com.revworkforce.service.GoalService;
 import com.revworkforce.service.LeaveService;
 import com.revworkforce.service.PerformanceService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class ManagerController {
+    private static final Logger logger = LogManager.getLogger(ManagerController.class);
 
     private static final EmployeeService empService = new EmployeeService();
     private static final LeaveService leaveService = new LeaveService();
@@ -20,6 +23,7 @@ public class ManagerController {
     private static final PerformanceService performanceService = new PerformanceService();
 
     public static void show(Employee manager) {
+        logger.info("Showing Manager Menu for managerId: {}", manager.getEmployeeId());
         Scanner sc = new Scanner(System.in);
 
         while (true) {
@@ -39,25 +43,26 @@ public class ManagerController {
                 }
                 int ch = sc.nextInt();
                 switch (ch) {
-                    case 1 -> handleTeam(manager);
+                    case 1 -> handleTeam(sc, manager);
                     case 2 -> handleLeaves(sc, manager);
                     case 3 -> handleReviews(sc, manager);
                     case 4 -> viewTeamGoals(manager);
                     case 0 -> {
+                        logger.info("Manager logged out");
                         return;
                     }
                     default -> System.out.println("Invalid Choice");
                 }
             } catch (Exception e) {
+                logger.error("Error in ManagerController menu", e);
                 System.out.println("Error: " + e.getMessage());
                 sc.nextLine();
             }
         }
     }
 
-    private static void handleTeam(Employee manager) {
+    private static void handleTeam(Scanner sc, Employee manager) {
         System.out.println("\n1. List & Balances  2. View Member Profile  3. Attendance Summary");
-        Scanner sc = new Scanner(System.in);
         if (!sc.hasNextInt())
             return;
         int ch = sc.nextInt();

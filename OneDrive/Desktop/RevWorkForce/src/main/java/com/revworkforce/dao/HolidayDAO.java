@@ -2,6 +2,8 @@ package com.revworkforce.dao;
 
 import com.revworkforce.model.CompanyHoliday;
 import com.revworkforce.util.DBConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HolidayDAO {
+    private static final Logger logger = LogManager.getLogger(HolidayDAO.class);
 
     public boolean addHoliday(CompanyHoliday holiday) {
         String sql = "INSERT INTO company_holiday (holiday_date, name, type) VALUES (?, ?, ?)";
@@ -20,6 +23,7 @@ public class HolidayDAO {
             ps.setString(3, holiday.getType());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            logger.error("Error adding holiday", e);
             e.printStackTrace();
             return false;
         }
@@ -38,6 +42,7 @@ public class HolidayDAO {
                 list.add(h);
             }
         } catch (Exception e) {
+            logger.error("Error retrieving holidays", e);
             e.printStackTrace();
         }
         return list;
