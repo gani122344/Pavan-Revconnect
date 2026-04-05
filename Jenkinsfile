@@ -8,7 +8,7 @@ pipeline {
     agent any
 
     environment {
-        EC2_IP          = '18.60.110.82'                    // EC2 public IP (ap-south-2)
+        EC2_IP          = '16.112.195.169'                   // Elastic IP (ap-south-2)
         EC2_CRED_ID     = 'aws-ec2-ssh-key'                // Jenkins SSH credential ID
         RDS_HOST        = credentials('rds-host')          // Jenkins secret: RDS endpoint
         RDS_USER        = credentials('rds-user')          // Jenkins secret: RDS username
