@@ -8,14 +8,14 @@ pipeline {
     agent any
 
     environment {
-        EC2_IP          = '13.126.2.73'                    // UPDATE: your EC2 public IP
+        EC2_IP          = '18.60.110.82'                    // EC2 public IP (ap-south-2)
         EC2_CRED_ID     = 'aws-ec2-ssh-key'                // Jenkins SSH credential ID
         RDS_HOST        = credentials('rds-host')          // Jenkins secret: RDS endpoint
         RDS_USER        = credentials('rds-user')          // Jenkins secret: RDS username
         RDS_PASS        = credentials('rds-password')      // Jenkins secret: RDS password
         JWT_SECRET      = credentials('jwt-secret')        // Jenkins secret: JWT key
         S3_BUCKET       = credentials('s3-bucket-name')    // Jenkins secret: S3 bucket
-        AWS_REGION      = 'ap-south-1'
+        AWS_REGION      = 'ap-south-2'
     }
 
     stages {
