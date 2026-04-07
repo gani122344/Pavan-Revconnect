@@ -809,61 +809,85 @@
 /* Song Badge - Instagram Style (Top) */
 /* ---------------------------------- */
 .story-song-badge-top {
-display: flex;
-align-items: center;
-gap: 6px;
-padding: 6px 12px;
-margin: 0 16px;
-background: rgba(0, 0, 0, 0.35);
-backdrop-filter: blur(8px);
-border-radius: 16px;
-z-index: 2005;
-overflow: hidden;
-cursor: pointer;
-max-width: 70%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    margin: 6px auto 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 20px;
+    z-index: 2005;
+    overflow: hidden;
+    cursor: pointer;
+    max-width: 70%;
+    width: fit-content;
+    border: 1px solid rgba(255,255,255,0.12);
+    transition: all 0.2s;
+}
+
+.story-song-badge-top:hover {
+    background: rgba(0, 0, 0, 0.7);
 }
 
 .story-song-badge-top > i {
-color: #fff;
-font-size: 0.65rem;
-flex-shrink: 0;
+    color: #fff;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: musicNoteRotate 3s linear infinite;
+}
+
+@keyframes musicNoteRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .song-name-scroll {
-flex: 1;
-overflow: hidden;
-white-space: nowrap;
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 90%, transparent 100%);
 }
 
 .song-name-marquee {
-display: inline-block;
-color: white;
-font-size: 0.75rem;
-font-weight: 600;
-animation: marqueeScroll 10s linear infinite;
-padding-right: 40px;
+    display: inline-block;
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    animation: marqueeScroll 12s linear infinite;
+    padding-right: 40px;
 }
 
 .song-name-marquee::after {
-content: attr(data-text);
-padding-left: 40px;
+    content: attr(data-text);
+    padding-left: 40px;
 }
 
 /* Mini equalizer bars */
 .eq-bars-mini {
-display: flex;
-align-items: flex-end;
-gap: 1.5px;
-height: 12px;
-flex-shrink: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 14px;
+    flex-shrink: 0;
 }
 
 .eq-bars-mini span {
-width: 2px;
-background: #fff;
-border-radius: 1px;
-height: 3px;
-transition: height 0.15s;
+    width: 2.5px;
+    background: #fff;
+    border-radius: 2px;
+    height: 3px;
+    transition: height 0.15s;
 }
 
 .eq-bars-mini.playing span:nth-child(1) { animation: eqMini 0.4s ease-in-out infinite alternate; }
@@ -871,13 +895,13 @@ transition: height 0.15s;
 .eq-bars-mini.playing span:nth-child(3) { animation: eqMini 0.35s ease-in-out infinite alternate 0.2s; }
 
 @keyframes eqMini {
-0% { height: 3px; }
-100% { height: 12px; }
+    0% { height: 3px; }
+    100% { height: 14px; }
 }
 
 @keyframes marqueeScroll {
-0% { transform: translateX(0); }
-100% { transform: translateX(-50%); }
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 
 /* ---------------------------------- */
@@ -886,30 +910,32 @@ transition: height 0.15s;
 .viewers-footer {
     position: fixed;
     bottom: 0;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
     display: flex;
     justify-content: center;
-    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 16px 24px calc(16px + env(safe-area-inset-bottom, 0px));
     z-index: 2050;
-    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
     pointer-events: auto;
 }
 
 .viewers-toggle-btn {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     color: white;
-    padding: 8px 20px;
-    border-radius: 24px;
+    padding: 10px 22px;
+    border-radius: 28px;
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    transition: all 0.2s;
+    transition: all 0.25s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .viewers-toggle-btn:hover {

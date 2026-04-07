@@ -141,33 +141,32 @@
                                                 <button class="msg-action-btn" (click)="contextMenuMessage = msg; startEditMessage()" title="Edit">
                                                     <i class="fa-solid fa-pen"></i>
                                                 </button>
-                                                <button class="msg-action-btn msg-action-delete" (click)="contextMenuMessage = msg; deleteMessage()" title="Delete">
+                                                <button class="msg-action-btn msg-action-delete" (click)="contextMenuMessage = msg; deleteMessage()">
                                                     <i class="fa-solid fa-trash"></i>
                                                 </button>
                                             </div>
-                                            <div class="bubble-content location-msg" *ngIf="isLocationMessage(msg)">
-                                                <a [href]="'https://www.google.com/maps?q=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng" target="_blank" rel="noopener" class="location-map-link">
-                                                    <div class="location-map-container">
-                                                        <img [src]="'https://staticmap.openstreetmap.de/staticmap.php?center=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng + '&zoom=15&size=400x200&maptype=mapnik&markers=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng + ',lightblue1'"
-                                                            onerror="this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'"
-                                                            alt="Location" class="location-map-img">
-                                                    </div>
-                                                    <div class="location-fallback-map" style="display:none">
-                                                        <i class="fa-solid fa-map-location-dot"></i>
-                                                        <span>📍 Shared Location</span>
-                                                        <small>{{getLocationCoords(msg).lat.toFixed(5)}}, {{getLocationCoords(msg).lng.toFixed(5)}}</small>
-                                                    </div>
-                                                </a>
-                                                <div class="location-bottom-bar">
-                                                    <div class="location-info">
-                                                        <i class="fa-solid fa-location-dot" style="color:#ef4444"></i>
-                                                        <div>
-                                                            <span class="location-title">Shared Location</span>
-                                                            <small class="location-coords">{{getLocationCoords(msg).lat.toFixed(5)}}, {{getLocationCoords(msg).lng.toFixed(5)}}</small>
+                                            <div class="bubble-content location-msg-wa" *ngIf="isLocationMessage(msg)">
+                                                <a [href]="'https://www.google.com/maps?q=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng" target="_blank" rel="noopener" class="loc-wa-link">
+                                                    <div class="loc-wa-map">
+                                                        <img [src]="'https://staticmap.openstreetmap.de/staticmap.php?center=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng + '&zoom=15&size=400x180&maptype=mapnik&markers=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng + ',lightblue1'"
+                                                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+                                                            alt="Location" class="loc-wa-map-img">
+                                                        <div class="loc-wa-map-fallback" style="display:none">
+                                                            <i class="fa-solid fa-map-location-dot"></i>
+                                                        </div>
+                                                        <div class="loc-wa-pin">
+                                                            <i class="fa-solid fa-location-dot"></i>
                                                         </div>
                                                     </div>
-                                                    <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
-                                                </div>
+                                                    <div class="loc-wa-footer">
+                                                        <div class="loc-wa-info">
+                                                            <span class="loc-wa-title">Location</span>
+                                                            <span class="loc-wa-coords">{{getLocationCoords(msg).lat.toFixed(5)}}, {{getLocationCoords(msg).lng.toFixed(5)}}</span>
+                                                        </div>
+                                                        <i class="fa-solid fa-chevron-right loc-wa-arrow"></i>
+                                                    </div>
+                                                </a>
+                                                <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
                                             </div>
                                             <div class="bubble-content" *ngIf="!isSharedPost(msg) && !isLocationMessage(msg) && !isVoiceMessage(msg) && !isDocumentMessage(msg)">
                                                 <img *ngIf="msg.mediaUrl" [src]="msg.mediaUrl" alt="Photo" class="msg-image" (click)="openLightbox(msg.mediaUrl!); $event.stopPropagation()">

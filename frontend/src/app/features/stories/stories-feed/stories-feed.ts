@@ -426,8 +426,13 @@ export class StoriesFeed implements OnInit, OnDestroy {
 
   toggleViewersPanel() {
     this.showViewersPanel = !this.showViewersPanel;
-    if (this.showViewersPanel && this.activeStoryToView) {
-      this.loadViewers(this.activeStoryToView.id);
+    if (this.showViewersPanel) {
+      this.pauseStory();
+      if (this.activeStoryToView) {
+        this.loadViewers(this.activeStoryToView.id);
+      }
+    } else {
+      this.resumeStory();
     }
     this.cdr.markForCheck();
   }
