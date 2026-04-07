@@ -46,6 +46,7 @@ public class BusinessService {
     private final AuthService authService;
     private final BusinessProfileMapper businessProfileMapper;
     private static final String SHOWCASE_MARKER = "\n[[SHOWCASE]]\n";
+    private static final String SHOWCASE_TAG = "[[SHOWCASE]]";
 
     @Transactional
     public BusinessProfileResponse createBusinessProfile(BusinessProfileRequest request) {
@@ -104,8 +105,8 @@ public class BusinessService {
         // Preserve showcase data when updating description
         String newDescription = request.getDescription();
         String existingDescription = profile.getDescription();
-        if (existingDescription != null && existingDescription.contains(SHOWCASE_MARKER)) {
-            String showcasePart = existingDescription.substring(existingDescription.indexOf(SHOWCASE_MARKER));
+        if (existingDescription != null && existingDescription.contains(SHOWCASE_TAG)) {
+            String showcasePart = existingDescription.substring(existingDescription.indexOf(SHOWCASE_TAG));
             newDescription = (newDescription == null ? "" : newDescription.trim()) + showcasePart;
         }
         profile.setDescription(newDescription);
@@ -325,10 +326,10 @@ public class BusinessService {
     }
 
     private List<Map<String, Object>> parseShowcase(String description) {
-        if (description == null || !description.contains(SHOWCASE_MARKER)) {
+        if (description == null || !description.contains(SHOWCASE_TAG)) {
             return new ArrayList<>();
         }
-        String showcaseRaw = description.substring(description.indexOf(SHOWCASE_MARKER) + SHOWCASE_MARKER.length());
+        String showcaseRaw = description.substring(description.indexOf(SHOWCASE_TAG) + SHOWCASE_TAG.length());
         if (showcaseRaw.isBlank()) {
             return new ArrayList<>();
         }
@@ -363,17 +364,18 @@ public class BusinessService {
 
     private String mergeDescriptionWithShowcase(String originalDescription, List<Map<String, Object>> items) {
         String bio = originalDescription == null ? "" : originalDescription;
-        if (bio.contains(SHOWCASE_MARKER)) {
-            bio = bio.substring(0, bio.indexOf(SHOWCASE_MARKER));
+        if (bio.contains(SHOWCASE_TAG)) {
+            bio = bio.substring(0, bio.indexOf(SHOWCASE_TAG));
         }
-        StringBuilder sb = new StringBuilder(bio.trim());
-        sb.append(SHOWCASE_MARKER);
+        bio = bio.trim();
+        StringBuilder sb = new StringBuilder(bio);
+        sb.append("\n").append(SHOWCASE_TAG).append("\n");
         for (Map<String, Object> item : items) {
             sb.append(item.getOrDefault("name", "")).append("|")
                     .append(item.getOrDefault("type", "")).append("|")
                     .append(item.getOrDefault("price", "")).append("|")
                     .append(item.getOrDefault("link", "")).append("\n");
         }
-        return sb.toString().trim();
+        return sb.toString();
     }
 }
