@@ -1,25 +1,13 @@
-# Ignore everything by default
-/*
+# Backend
+backend/target/
+backend/*.log
+backend/*.log.*
+backend/.mvn/wrapper/maven-wrapper.jar
 
-# Allow only the project
-!.gitignore
-!Downloads/
-Downloads/*
-!Downloads/REVCONNECT-main/
-Downloads/REVCONNECT-main/*
-!Downloads/REVCONNECT-main/backend/
-!Downloads/REVCONNECT-main/frontend/
-
-# Backend ignores
-Downloads/REVCONNECT-main/backend/target/
-Downloads/REVCONNECT-main/backend/*.log
-Downloads/REVCONNECT-main/backend/*.log.*
-Downloads/REVCONNECT-main/backend/.mvn/wrapper/maven-wrapper.jar
-
-# Frontend ignores
-Downloads/REVCONNECT-main/frontend/node_modules/
-Downloads/REVCONNECT-main/frontend/dist/
-Downloads/REVCONNECT-main/frontend/.angular/
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
 
 # IDE
 .idea/
