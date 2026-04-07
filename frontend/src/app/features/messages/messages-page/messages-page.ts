@@ -74,6 +74,8 @@ export class MessagesPage implements OnInit, OnDestroy {
     playingVoiceId: number | null = null;
     private voiceAudio: HTMLAudioElement | null = null;
     voiceWaveformBars: number[] = Array.from({ length: 28 }, () => Math.random() * 16 + 4);
+    voiceProgressIndex = 0;
+    private voiceProgressInterval: any = null;
 
     // Document upload
     isUploadingDoc = false;
@@ -926,20 +928,39 @@ export class MessagesPage implements OnInit, OnDestroy {
         if (this.playingVoiceId === msg.id && this.voiceAudio) {
             this.voiceAudio.pause();
             this.playingVoiceId = null;
+            this.stopVoiceProgress();
             this.cdr.detectChanges();
             return;
         }
 
         if (this.voiceAudio) { this.voiceAudio.pause(); }
+        this.stopVoiceProgress();
         this.voiceAudio = new Audio(url);
         this.playingVoiceId = msg.id;
+        this.voiceProgressIndex = 0;
         this.voiceWaveformBars = Array.from({ length: 28 }, () => Math.random() * 16 + 4);
         this.cdr.detectChanges();
         this.voiceAudio.play().catch(() => {});
+        this.voiceProgressInterval = setInterval(() => {
+            if (this.voiceAudio && this.voiceAudio.duration) {
+                const pct = this.voiceAudio.currentTime / this.voiceAudio.duration;
+                this.voiceProgressIndex = Math.floor(pct * this.voiceWaveformBars.length);
+                this.cdr.detectChanges();
+            }
+        }, 80);
         this.voiceAudio.onended = () => {
             this.playingVoiceId = null;
+            this.voiceProgressIndex = 0;
+            this.stopVoiceProgress();
             this.cdr.detectChanges();
         };
+    }
+
+    private stopVoiceProgress() {
+        if (this.voiceProgressInterval) {
+            clearInterval(this.voiceProgressInterval);
+            this.voiceProgressInterval = null;
+        }
     }
 
     // ─── Document Sharing ───

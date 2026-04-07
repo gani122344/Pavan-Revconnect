@@ -481,10 +481,42 @@
     border: 1px solid var(--border-light);
 }
 
-.settings-wrapper .settings-grid .settings-detail .settings-content .tab-pane .empty-state p {
-    color: var(--text-secondary);
-    font-weight: 600;
-    margin: 0;
+/* Platform icon colors */
+.link-icon.platform-github { background: #24292e !important; color: #fff !important; }
+.link-icon.platform-linkedin { background: #0a66c2 !important; color: #fff !important; }
+.link-icon.platform-twitter { background: #1d9bf0 !important; color: #fff !important; }
+.link-icon.platform-instagram { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; color: #fff !important; }
+.link-icon.platform-youtube { background: #ff0000 !important; color: #fff !important; }
+.link-icon.platform-facebook { background: #1877f2 !important; color: #fff !important; }
+.link-icon.platform-default { background: var(--bg-secondary) !important; color: var(--accent-primary) !important; }
+
+.link-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.link-visit-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.link-visit-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-primary);
+    transform: scale(1.08);
 }
 
 /* Privacy Cards Redesign */

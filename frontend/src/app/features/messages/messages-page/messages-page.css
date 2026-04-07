@@ -1223,64 +1223,117 @@ color: #64748b;
     to { opacity: 1; }
 }
 
-/* ─── Voice Message Bubble ─── */
+/* ─── Voice Message Bubble (WhatsApp Style) ─── */
 .voice-msg {
-    min-width: 200px;
-    max-width: 300px;
+    min-width: 240px;
+    max-width: 320px;
+    padding: 0.5rem 0.65rem !important;
 }
 
 .voice-msg-row {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.3rem 0;
+    gap: 0.65rem;
+    padding: 0;
 }
 
 .voice-play-btn {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     border: none;
-    background: var(--accent-primary, #6366f1);
+    background: rgba(255,255,255,0.2);
     color: #fff;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: transform 0.15s;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+}
+
+.message-bubble.theirs .voice-play-btn {
+    background: var(--accent-primary, #6366f1);
+    color: #fff;
 }
 
 .voice-play-btn:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
+    filter: brightness(1.15);
+}
+
+.voice-play-btn:active {
+    transform: scale(0.95);
+}
+
+.voice-wave-track {
+    flex: 1;
+    min-width: 0;
+    position: relative;
 }
 
 .voice-waveform {
     display: flex;
     align-items: center;
-    gap: 2px;
-    flex: 1;
-    height: 28px;
+    gap: 2.5px;
+    height: 32px;
 }
 
 .voice-bar {
     width: 3px;
-    border-radius: 2px;
-    background: var(--accent-primary, #6366f1);
-    opacity: 0.5;
-    transition: height 0.2s;
+    min-height: 3px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.35);
+    transition: background 0.15s, height 0.15s;
 }
 
-.message-bubble.mine .voice-bar {
-    background: rgba(255,255,255,0.6);
+.voice-bar.played {
+    background: rgba(255,255,255,0.9);
+}
+
+.message-bubble.theirs .voice-bar {
+    background: rgba(99,102,241,0.25);
+}
+
+.message-bubble.theirs .voice-bar.played {
+    background: var(--accent-primary, #6366f1);
+}
+
+.voice-waveform.playing .voice-bar {
+    animation: voiceBarPulse 0.6s ease-in-out infinite alternate;
+}
+
+.voice-waveform.playing .voice-bar:nth-child(2n) {
+    animation-delay: 0.1s;
+}
+
+.voice-waveform.playing .voice-bar:nth-child(3n) {
+    animation-delay: 0.2s;
+}
+
+@keyframes voiceBarPulse {
+    0% { transform: scaleY(0.85); }
+    100% { transform: scaleY(1.15); }
 }
 
 .voice-duration {
-    font-size: 0.72rem;
-    color: var(--text-muted, #94a3b8);
-    min-width: 30px;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.7);
+    min-width: 32px;
     text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.message-bubble.theirs .voice-duration {
+    color: var(--text-muted, #94a3b8);
+}
+
+.voice-msg .msg-time {
+    margin-top: 2px;
 }
 
 /* ─── Document Message Bubble ─── */

@@ -267,6 +267,51 @@ export class SettingsPage {
     return clean || rawText;
   }
 
+  getLinkPlatformLabel(link: any): string {
+    const url = this.getLinkUrl(link).toLowerCase();
+    if (url.includes('github.com')) return 'GitHub';
+    if (url.includes('linkedin.com')) return 'LinkedIn';
+    if (url.includes('twitter.com') || url.includes('x.com')) return 'X (Twitter)';
+    if (url.includes('instagram.com')) return 'Instagram';
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+    if (url.includes('facebook.com')) return 'Facebook';
+    if (url.includes('dribbble.com')) return 'Dribbble';
+    if (url.includes('behance.net')) return 'Behance';
+    if (url.includes('medium.com')) return 'Medium';
+    if (url.includes('stackoverflow.com')) return 'Stack Overflow';
+    if (url.includes('figma.com')) return 'Figma';
+    if (url.includes('codepen.io')) return 'CodePen';
+    return this.getLinkDisplay(link);
+  }
+
+  getLinkPlatformIcon(link: any): string {
+    const url = this.getLinkUrl(link).toLowerCase();
+    if (url.includes('github.com')) return 'fa-brands fa-github';
+    if (url.includes('linkedin.com')) return 'fa-brands fa-linkedin-in';
+    if (url.includes('twitter.com') || url.includes('x.com')) return 'fa-brands fa-x-twitter';
+    if (url.includes('instagram.com')) return 'fa-brands fa-instagram';
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'fa-brands fa-youtube';
+    if (url.includes('facebook.com')) return 'fa-brands fa-facebook-f';
+    if (url.includes('dribbble.com')) return 'fa-brands fa-dribbble';
+    if (url.includes('behance.net')) return 'fa-brands fa-behance';
+    if (url.includes('medium.com')) return 'fa-brands fa-medium';
+    if (url.includes('stackoverflow.com')) return 'fa-brands fa-stack-overflow';
+    if (url.includes('figma.com')) return 'fa-brands fa-figma';
+    if (url.includes('codepen.io')) return 'fa-brands fa-codepen';
+    return 'fa-solid fa-globe';
+  }
+
+  getLinkPlatformClass(link: any): string {
+    const url = this.getLinkUrl(link).toLowerCase();
+    if (url.includes('github.com')) return 'platform-github';
+    if (url.includes('linkedin.com')) return 'platform-linkedin';
+    if (url.includes('twitter.com') || url.includes('x.com')) return 'platform-twitter';
+    if (url.includes('instagram.com')) return 'platform-instagram';
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'platform-youtube';
+    if (url.includes('facebook.com')) return 'platform-facebook';
+    return 'platform-default';
+  }
+
   savePrivacy() {
     this.isLoading = true;
     this.clearMessages();

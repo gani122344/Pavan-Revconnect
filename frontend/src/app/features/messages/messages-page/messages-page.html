@@ -174,14 +174,18 @@
                                                 <p *ngIf="msg.content" [innerHTML]="msg.content | linkify"></p>
                                                 <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
                                             </div>
-                                            <!-- Voice message -->
+                                            <!-- Voice message (WhatsApp style) -->
                                             <div class="bubble-content voice-msg" *ngIf="isVoiceMessage(msg)">
                                                 <div class="voice-msg-row">
                                                     <button class="voice-play-btn" (click)="togglePlayVoice(msg)">
                                                         <i [class]="playingVoiceId === msg.id ? 'fa-solid fa-pause' : 'fa-solid fa-play'"></i>
                                                     </button>
-                                                    <div class="voice-waveform">
-                                                        <div class="voice-bar" *ngFor="let h of voiceWaveformBars" [style.height.px]="h"></div>
+                                                    <div class="voice-wave-track">
+                                                        <div class="voice-waveform" [class.playing]="playingVoiceId === msg.id">
+                                                            <div class="voice-bar" *ngFor="let h of voiceWaveformBars; let i = index"
+                                                                [style.height.px]="h"
+                                                                [class.played]="playingVoiceId === msg.id && i < voiceProgressIndex"></div>
+                                                        </div>
                                                     </div>
                                                     <span class="voice-duration">{{getVoiceDuration(msg)}}</span>
                                                 </div>
