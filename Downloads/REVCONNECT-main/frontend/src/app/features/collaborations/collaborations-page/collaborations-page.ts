@@ -90,15 +90,17 @@ export class CollaborationsPage implements OnInit {
 
   loadCollaborations() {
     this.isLoading = true;
+    this.collaborations = [];
     const status = this.activeTab === 'all' ? undefined : this.activeTab.toUpperCase();
     this.collabService.getMyCollaborations(status).subscribe({
       next: (res: any) => {
-        if (res.success && res.data) {
-          this.collaborations = res.data.content || [];
-        }
+        this.collaborations = res?.data?.content || res?.data || [];
         this.isLoading = false;
       },
-      error: () => { this.isLoading = false; }
+      error: () => {
+        this.collaborations = [];
+        this.isLoading = false;
+      }
     });
   }
 
@@ -240,7 +242,8 @@ export class CollaborationsPage implements OnInit {
     this.showcaseLoading.add(collabId);
     this.userService.getShowcaseByUserId(userId).subscribe({
       next: (res: any) => {
-        this.showcaseItems.set(collabId, res.success && res.data ? res.data : []);
+        const items = res?.data || res || [];
+        this.showcaseItems.set(collabId, Array.isArray(items) ? items : []);
         this.showcaseLoading.delete(collabId);
       },
       error: () => {

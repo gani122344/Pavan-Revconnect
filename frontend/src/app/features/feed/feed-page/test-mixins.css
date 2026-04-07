@@ -1,5 +1,0 @@
-@use '../../../shared/styles/mixins' as *;
-
-.test-mixin {
-    @include glass-card-styles;
-}
