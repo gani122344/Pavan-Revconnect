@@ -520,35 +520,32 @@
 
         <!-- Right Sidebar (About / Details) -->
         <aside class="widgets-column">
-            <!-- Dynamic Partnerships Card -->
+            <!-- Active Partnerships Card (auto from collaborations) -->
             <div class="widget-card endorsements-card glass-card"
                 *ngIf="user?.userType === 'CREATOR' || user?.userType === 'BUSINESS'">
                 <div class="widget-header">
-                    <h3>{{ user?.userType === 'CREATOR' ? 'Brand Partnerships' : 'Strategic Partnerships' }}</h3>
-                    <button class="edit-link" *ngIf="isCurrentUser()" (click)="openEditModal()"
-                        title="Manage partnerships">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
+                    <h3><i class="fa-solid fa-handshake" style="color:var(--accent-primary);margin-right:6px;font-size:0.85rem"></i>
+                        {{ user?.userType === 'CREATOR' ? 'Brand Partnerships' : 'Creator Partners' }}</h3>
                 </div>
                 <div class="widget-content">
-                    <div class="endorsement-list" *ngIf="endorsementLinks.length > 0">
-                        <a *ngFor="let link of endorsementLinks" [href]="link.url" target="_blank"
+                    <div class="endorsement-list" *ngIf="activePartners.length > 0">
+                        <a *ngFor="let partner of activePartners" [routerLink]="['/profile', partner.username]"
                             class="endorsement-item">
-                            <i class="fa-solid fa-handshake"></i>
+                            <img [src]="partner.pic || 'https://ui-avatars.com/api/?name=' + partner.name + '&background=random&size=64'" 
+                                class="partner-avatar" alt="">
                             <div class="info">
-                                <span>{{link.title || 'Partner Link'}}</span>
-                                <small>{{link.url.replace('https://', '').replace('http://', '').split('/')[0]}}</small>
+                                <span>{{ partner.name }}</span>
+                                <small>&#64;{{ partner.username }}</small>
                             </div>
+                            <span class="partner-active-badge">Active</span>
                         </a>
                     </div>
 
-                    <!-- Empty State -->
-                    <div class="empty-widget-state" *ngIf="endorsementLinks.length === 0">
+                    <div class="empty-widget-state" *ngIf="activePartners.length === 0">
                         <div class="empty-icon">
                             <i class="fa-solid fa-handshake-slash"></i>
                         </div>
-                        <p>{{ isCurrentUser() ? 'Add your brand partnerships to showcase' : 'No partnerships to show
-                            yet' }}</p>
+                        <p>{{ isCurrentUser() ? 'Accept collaborations to show partnerships here' : 'No active partnerships yet' }}</p>
                     </div>
                 </div>
             </div>
@@ -642,39 +639,6 @@
                 <div class="form-group">
                     <label>Website</label>
                     <input type="url" class="form-control" [(ngModel)]="editData.website" placeholder="https://...">
-                </div>
-
-                <div class="endorsements-management"
-                    *ngIf="user?.userType === 'CREATOR' || user?.userType === 'BUSINESS'">
-                    <div class="section-header">
-                        <h4>{{ user?.userType === 'CREATOR' ? 'Endorsements & Partnerships' : 'Strategic Partnerships'
-                            }}</h4>
-                        <button class="btn-add-partner" (click)="addEndorsementLink()">
-                            <i class="fa-solid fa-plus"></i> Add Link
-                        </button>
-                    </div>
-
-                    <div *ngFor="let link of endorsementLinks; let i = index" class="link-edit-card">
-                        <div class="link-inputs">
-                            <div class="form-group mini">
-                                <label>Title</label>
-                                <input type="text" class="form-control" [(ngModel)]="link.title"
-                                    placeholder="Puma, Nike...">
-                            </div>
-                            <div class="form-group mini">
-                                <label>URL</label>
-                                <input type="url" class="form-control" [(ngModel)]="link.url" placeholder="https://...">
-                            </div>
-                        </div>
-                        <button class="remove-btn" (click)="removeEndorsementLink(i)" title="Remove partner">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-
-                    <div class="empty-links" *ngIf="endorsementLinks.length === 0">
-                        <i class="fa-solid fa-handshake-slash"></i>
-                        <p>No partnerships added yet.</p>
-                    </div>
                 </div>
 
                 <div *ngIf="user?.userType === 'BUSINESS'">

@@ -107,6 +107,12 @@ export class CollaborationsPage implements OnInit {
           this.collaborations = [];
         }
         this.isLoading = false;
+        // Auto-load showcase for active collabs
+        this.collaborations.forEach(c => {
+          if (c.status === 'ACTIVE' && this.isCreator) {
+            this.loadShowcase(c.businessId, c.id);
+          }
+        });
       },
       error: () => {
         this.collaborations = [];
@@ -268,24 +274,13 @@ export class CollaborationsPage implements OnInit {
     return this.showcaseItems.get(collabId) || [];
   }
 
-  // ═══ Creator: Quick promote a showcase item ═══
-  quickPromote(collab: CollaborationResponse, item: any) {
-    if (this.isPromoting) return;
-    this.isPromoting = true;
-    this.collabService.grantPromotion({
-      postId: 0,
-      creatorId: collab.creatorId,
-      ctaLabel: item.name || 'Shop Now',
-      ctaUrl: item.link || ''
-    }).subscribe({
-      next: () => {
-        this.isPromoting = false;
-        alert('Promotion shared! The business post will show your partnership.');
-      },
-      error: (err: any) => {
-        this.isPromoting = false;
-        alert(err.error?.message || 'Failed to promote');
-      }
+  // ═══ Creator: Copy product info for post creation ═══
+  copyProductInfo(item: any) {
+    const text = `${item.name || ''}${item.price ? ' - ₹' + item.price : ''}${item.link ? '\n' + item.link : ''}`;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Product details copied! Paste it when creating your promo post.');
+    }).catch(() => {
+      prompt('Copy this:', text);
     });
   }
 

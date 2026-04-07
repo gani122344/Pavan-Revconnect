@@ -15,6 +15,7 @@ import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { HashtagTextComponent } from '../../../shared/components/hashtag-text/hashtag-text.component';
 import { AudioPlayerService } from '../../../core/services/audio-player.service';
+import { CollaborationService } from '../../../core/services/collaboration.service';
 import { SONG_LIBRARY, Song } from '../../../shared/data/songs.data';
 import { BottomNav } from '../../../core/components/bottom-nav/bottom-nav';
 import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
@@ -79,6 +80,7 @@ export class ProfilePage implements OnInit {
     isLoadingPastRequests = false;
 
     endorsementLinks: { title: string, url: string }[] = [];
+    activePartners: { name: string, username: string, pic: string }[] = [];
 
     isUploadingProfilePic = false;
     isUploadingCoverPhoto = false;
@@ -109,7 +111,8 @@ export class ProfilePage implements OnInit {
         private notificationService: NotificationService,
         private http: HttpClient,
         private cdr: ChangeDetectorRef,
-        private audioPlayer: AudioPlayerService
+        private audioPlayer: AudioPlayerService,
+        private collabService: CollaborationService
     ) { }
 
     allSongs = SONG_LIBRARY;
@@ -423,6 +426,7 @@ export class ProfilePage implements OnInit {
                             this.user = this.currentUser;
                             this.viewedUserId = this.currentUser.id;
                             this.parseEndorsementLinks();
+                            this.loadActivePartners();
                             this.loadUserPosts(this.user.id);
                             this.loadUserStats(this.user.id);
                             this.loadRequests();
@@ -1214,6 +1218,27 @@ export class ProfilePage implements OnInit {
         } else {
             this.endorsementLinks = [];
         }
+    }
+
+    loadActivePartners() {
+        if (!this.user || (this.user.userType !== 'CREATOR' && this.user.userType !== 'BUSINESS')) {
+            this.activePartners = [];
+            return;
+        }
+        this.collabService.getMyCollaborations('ACTIVE').subscribe({
+            next: (res: any) => {
+                const collabs = res?.data?.content || res?.data || [];
+                if (!Array.isArray(collabs)) { this.activePartners = []; return; }
+                const isBiz = this.user?.userType === 'BUSINESS';
+                this.activePartners = collabs.map((c: any) => ({
+                    name: isBiz ? c.creatorName : c.businessName,
+                    username: isBiz ? c.creatorUsername : c.businessUsername,
+                    pic: isBiz ? c.creatorPic : c.businessPic
+                }));
+                this.cdr.markForCheck();
+            },
+            error: () => { this.activePartners = []; }
+        });
     }
 
     requestVerification() {

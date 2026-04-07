@@ -81,30 +81,47 @@
 
                         <div class="collab-date"><i class="fa-regular fa-calendar"></i> {{ formatDate(collab.createdAt) }}</div>
 
-                        <!-- Showcase Items for Active Collaborations -->
-                        <div class="showcase-section" *ngIf="collab.status === 'ACTIVE' && isCreator" [class.loaded]="getShowcase(collab.id).length > 0">
-                            <div *ngIf="!showcaseItems.has(collab.id) && !showcaseLoading.has(collab.id)" style="margin-bottom:0.5rem">
-                                <button class="btn-secondary" style="width:100%" (click)="loadShowcase(collab.businessId, collab.id)">
-                                    <i class="fa-solid fa-store"></i> View Business Products & Showcase
-                                </button>
+                        <!-- ═══ Product Catalog (Creator sees business products to promote) ═══ -->
+                        <div class="product-catalog" *ngIf="collab.status === 'ACTIVE' && isCreator">
+                            <div class="catalog-header">
+                                <h4><i class="fa-solid fa-store"></i> Products to Promote</h4>
+                                <span class="catalog-hint">Create posts featuring these products to earn your commission</span>
                             </div>
                             <div *ngIf="showcaseLoading.has(collab.id)" class="showcase-loading">
-                                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading showcase...
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading products...
                             </div>
-                            <div *ngIf="getShowcase(collab.id).length > 0" class="showcase-grid">
-                                <div class="showcase-card" *ngFor="let item of getShowcase(collab.id)">
-                                    <div class="showcase-info">
-                                        <strong>{{ item.name }}</strong>
-                                        <span class="showcase-type">{{ item.type }}</span>
-                                        <span class="showcase-price" *ngIf="item.price">₹{{ item.price }}</span>
+                            <div *ngIf="getShowcase(collab.id).length > 0" class="product-grid">
+                                <div class="product-card" *ngFor="let item of getShowcase(collab.id)">
+                                    <div class="product-badge">{{ item.type || 'Product' }}</div>
+                                    <div class="product-details">
+                                        <span class="product-name">{{ item.name }}</span>
+                                        <span class="product-price" *ngIf="item.price">₹{{ item.price }}</span>
                                     </div>
-                                    <a *ngIf="item.link" [href]="item.link" target="_blank" class="showcase-link">
-                                        <i class="fa-solid fa-external-link-alt"></i>
-                                    </a>
+                                    <div class="product-actions">
+                                        <a *ngIf="item.link" [href]="item.link" target="_blank" class="product-btn product-btn-view" title="View product">
+                                            <i class="fa-solid fa-external-link-alt"></i>
+                                        </a>
+                                        <button class="product-btn product-btn-copy" (click)="copyProductInfo(item)" title="Copy product details">
+                                            <i class="fa-regular fa-copy"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div *ngIf="showcaseItems.has(collab.id) && getShowcase(collab.id).length === 0 && !showcaseLoading.has(collab.id)" class="showcase-empty">
-                                <i class="fa-solid fa-box-open"></i> No showcase items yet
+                            <div *ngIf="showcaseItems.has(collab.id) && getShowcase(collab.id).length === 0 && !showcaseLoading.has(collab.id)" class="catalog-empty">
+                                <i class="fa-solid fa-box-open"></i>
+                                <span>Business hasn't added products yet</span>
+                            </div>
+                            <div class="catalog-tip" *ngIf="getShowcase(collab.id).length > 0">
+                                <i class="fa-solid fa-lightbulb"></i>
+                                <span>Go to <strong>Home</strong>, create a post about these products. It will automatically show <em>"Paid partnership with &#64;{{ collab.businessUsername }}"</em> label.</span>
+                            </div>
+                        </div>
+
+                        <!-- ═══ Creator's Reach (Business sees creator stats) ═══ -->
+                        <div class="creator-reach" *ngIf="collab.status === 'ACTIVE' && isBusiness">
+                            <div class="catalog-header">
+                                <h4><i class="fa-solid fa-chart-line"></i> Collaboration Actions</h4>
+                                <span class="catalog-hint">Grant promotion labels to {{ collab.creatorName }}'s posts about your products</span>
                             </div>
                         </div>
 
@@ -114,7 +131,7 @@
                                 <button class="btn-secondary btn-danger" (click)="rejectInvite(collab)"><i class="fa-solid fa-times"></i> Decline</button>
                             </ng-container>
                             <ng-container *ngIf="isBusiness && collab.status === 'ACTIVE'">
-                                <button class="btn-primary" (click)="openGrantModal(collab)"><i class="fa-solid fa-bullhorn"></i> Promote Post</button>
+                                <button class="btn-primary" (click)="openGrantModal(collab)"><i class="fa-solid fa-bullhorn"></i> Grant Promotion Label</button>
                                 <button class="btn-secondary" (click)="downloadContractPdf(collab)"><i class="fa-solid fa-file-pdf"></i> PDF</button>
                                 <button class="btn-secondary btn-danger" (click)="revokeCollab(collab)"><i class="fa-solid fa-ban"></i> Revoke</button>
                             </ng-container>

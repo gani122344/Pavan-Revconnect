@@ -321,10 +321,14 @@
 
                         <!-- Image Lightbox Overlay -->
                         <div class="lightbox-overlay" *ngIf="lightboxVisible" (click)="closeLightbox()">
+                            <button class="lightbox-close" (click)="closeLightbox()" title="Close">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                             <div class="lightbox-content" (click)="$event.stopPropagation()">
                                 <img [src]="lightboxImageUrl" alt="Image" class="lightbox-image">
                             </div>
                         </div>
+
                     </ng-container>
                 </div>
 

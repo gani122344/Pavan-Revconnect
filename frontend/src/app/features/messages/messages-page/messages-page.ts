@@ -794,13 +794,21 @@ export class MessagesPage implements OnInit, OnDestroy {
         this.lightboxImageUrl = url;
         this.lightboxVisible = true;
         this.cdr.detectChanges();
+        this._lightboxEscHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') this.closeLightbox(); };
+        document.addEventListener('keydown', this._lightboxEscHandler);
     }
 
     closeLightbox() {
         this.lightboxVisible = false;
         this.lightboxImageUrl = '';
+        if (this._lightboxEscHandler) {
+            document.removeEventListener('keydown', this._lightboxEscHandler);
+            this._lightboxEscHandler = null;
+        }
         this.cdr.detectChanges();
     }
+
+    private _lightboxEscHandler: ((e: KeyboardEvent) => void) | null = null;
 
     // ─── Voice Recording ───
     async startRecording() {
