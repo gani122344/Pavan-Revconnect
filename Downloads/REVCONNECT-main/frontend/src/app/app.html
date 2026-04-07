@@ -1,1 +1,120 @@
 <router-outlet></router-outlet>
+<app-install-prompt></app-install-prompt>
+
+<!-- Global Call Overlay (shows on every page EXCEPT messages which has its own) -->
+<div class="global-call-overlay" *ngIf="callState?.active && !isOnMessagesPage">
+
+    <!-- ══ RINGING: Incoming call ══ -->
+    <div class="call-ringing-fullscreen" *ngIf="callState?.status === 'ringing' && callState?.direction === 'incoming'">
+        <div class="ringing-bg"></div>
+        <div class="ringing-content">
+            <div class="ringing-avatar-area">
+                <div class="call-pulse-ring"></div>
+                <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
+                    class="call-avatar" alt="Caller">
+            </div>
+            <h3 class="call-name">{{callState?.remoteName}}</h3>
+            <p class="call-status">Incoming {{callState?.callType}} call...</p>
+        </div>
+        <div class="call-actions ringing-actions">
+            <button class="call-action-btn reject" (click)="callService.rejectCall()">
+                <i class="fa-solid fa-phone-slash"></i>
+                <span>Decline</span>
+            </button>
+            <button class="call-action-btn accept" (click)="callService.acceptCall()">
+                <i class="fa-solid fa-phone"></i>
+                <span>Accept</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ RINGING: Outgoing video call — show local camera preview ══ -->
+    <div class="call-ringing-fullscreen" *ngIf="callState?.status === 'ringing' && callState?.direction === 'outgoing' && callState?.callType === 'video'">
+        <video class="ringing-local-preview local-mirror" #gLocalVideo autoplay playsinline muted></video>
+        <div class="ringing-overlay-gradient"></div>
+        <div class="ringing-content">
+            <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
+                class="call-avatar ringing-small-avatar" alt="Callee">
+            <h3 class="call-name">{{callState?.remoteName}}</h3>
+            <p class="call-status">Ringing...</p>
+        </div>
+        <div class="call-actions ringing-actions">
+            <button class="call-action-btn reject" (click)="callService.endCall()">
+                <i class="fa-solid fa-phone-slash"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ RINGING: Outgoing audio call ══ -->
+    <div class="call-ringing-fullscreen" *ngIf="callState?.status === 'ringing' && callState?.direction === 'outgoing' && callState?.callType === 'audio'">
+        <div class="ringing-bg"></div>
+        <div class="ringing-content">
+            <div class="ringing-avatar-area">
+                <div class="call-pulse-ring"></div>
+                <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
+                    class="call-avatar" alt="Callee">
+            </div>
+            <h3 class="call-name">{{callState?.remoteName}}</h3>
+            <p class="call-status">Calling...</p>
+        </div>
+        <div class="call-actions ringing-actions">
+            <button class="call-action-btn reject" (click)="callService.endCall()">
+                <i class="fa-solid fa-phone-slash"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ CONNECTED / CONNECTING ══ -->
+    <div class="call-connected" *ngIf="callState?.status === 'connecting' || callState?.status === 'connected'">
+        <!-- Video streams -->
+        <div class="video-container" *ngIf="callState?.callType === 'video'">
+            <video [class]="videoSwapped ? 'pip-video' : 'remote-video'" #gRemoteVideo autoplay playsinline
+                   (click)="videoSwapped ? toggleVideoSwap() : null"
+                   [style.left.px]="videoSwapped ? pipX : null"
+                   [style.top.px]="videoSwapped ? pipY : null"
+                   (pointerdown)="videoSwapped ? onPipPointerDown($event) : null"></video>
+            <video [class]="(videoSwapped ? 'remote-video' : 'pip-video') + ' local-mirror'" #gLocalVideo autoplay playsinline muted
+                   (click)="!videoSwapped ? toggleVideoSwap() : null"
+                   [style.left.px]="!videoSwapped ? pipX : null"
+                   [style.top.px]="!videoSwapped ? pipY : null"
+                   (pointerdown)="!videoSwapped ? onPipPointerDown($event) : null"></video>
+            <div class="video-info-overlay">
+                <span class="video-name">{{callState?.remoteName}}</span>
+                <span class="video-duration" *ngIf="callState?.duration !== undefined">
+                    {{callService.formatDuration(callState?.duration || 0)}}
+                </span>
+                <span class="video-connecting" *ngIf="callState?.status === 'connecting'">Connecting...</span>
+            </div>
+        </div>
+
+        <!-- Audio call UI -->
+        <div class="audio-call-ui" *ngIf="callState?.callType === 'audio'">
+            <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
+                class="call-avatar" alt="User">
+            <h3 class="call-name">{{callState?.remoteName}}</h3>
+            <p class="call-duration" *ngIf="callState?.duration !== undefined">
+                {{callService.formatDuration(callState?.duration || 0)}}
+            </p>
+            <p class="call-status" *ngIf="callState?.status === 'connecting'">Connecting...</p>
+        </div>
+
+        <!-- Call controls -->
+        <div class="call-controls">
+            <button class="control-btn" [class.active]="callState?.isMuted" (click)="callService.toggleMute()" title="Mute">
+                <i class="fa-solid" [ngClass]="callState?.isMuted ? 'fa-microphone-slash' : 'fa-microphone'"></i>
+            </button>
+            <button class="control-btn" [class.active]="!callState?.isSpeakerOn" (click)="callService.toggleSpeaker()" title="Speaker">
+                <i class="fa-solid" [ngClass]="callState?.isSpeakerOn ? 'fa-volume-high' : 'fa-volume-xmark'"></i>
+            </button>
+            <button class="control-btn" *ngIf="callState?.callType === 'video'"
+                [class.active]="callState?.isCameraOff" (click)="callService.toggleCamera()" title="Camera">
+                <i class="fa-solid" [ngClass]="callState?.isCameraOff ? 'fa-video-slash' : 'fa-video'"></i>
+            </button>
+            <button class="control-btn end-call" (click)="callService.endCall()" title="End Call">
+                <i class="fa-solid fa-phone-slash"></i>
+            </button>
+        </div>
+    </div>
+</div>

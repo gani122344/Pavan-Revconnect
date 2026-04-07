@@ -131,6 +131,10 @@ export class UserService {
         return this.http.get<ApiResponse<any[]>>('/api/business/showcase');
     }
 
+    getShowcaseByUserId(userId: number): Observable<ApiResponse<any[]>> {
+        return this.http.get<ApiResponse<any[]>>(`/api/business/showcase/${userId}`);
+    }
+
     addShowcaseItem(item: any): Observable<ApiResponse<any[]>> {
         return this.http.post<ApiResponse<any[]>>('/api/business/showcase', item);
     }

@@ -14,7 +14,10 @@ import { NotificationService } from '../../../core/services/notification.service
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { HashtagTextComponent } from '../../../shared/components/hashtag-text/hashtag-text.component';
+import { AudioPlayerService } from '../../../core/services/audio-player.service';
+import { SONG_LIBRARY, Song } from '../../../shared/data/songs.data';
 import { BottomNav } from '../../../core/components/bottom-nav/bottom-nav';
+import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
 
 @Component({
     selector: 'app-profile-page',
@@ -105,8 +108,28 @@ export class ProfilePage implements OnInit {
         private router: Router,
         private notificationService: NotificationService,
         private http: HttpClient,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private audioPlayer: AudioPlayerService
     ) { }
+
+    allSongs = SONG_LIBRARY;
+
+    togglePostAudio(post: any) {
+        if (!post.songTitle) return;
+        const song = this.allSongs.find((s: Song) => s.title === post.songTitle);
+        const genre = song?.genre || 'Love';
+        this.audioPlayer.toggle(post.songTitle, genre);
+        this.cdr.markForCheck();
+    }
+
+    isPostPlaying(post: any): boolean {
+        return this.audioPlayer.getIsPlaying() && this.audioPlayer.getCurrentSongKey() === `${post.songTitle}::${this.getSongGenre(post.songTitle)}`;
+    }
+
+    getSongGenre(title: string): string {
+        const song = this.allSongs.find((s: Song) => s.title === title);
+        return song?.genre || 'Love';
+    }
 
     onProfilePicSelected(event: any) {
         const file = event.target.files[0];
@@ -798,23 +821,8 @@ export class ProfilePage implements OnInit {
         return date.toLocaleDateString(undefined, options);
     }
 
-    getRelativeTime(dateString: string): string {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '';
-        const now = new Date();
-        const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
-
-        if (seconds < 60) return 'just now';
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return minutes + 'm ago';
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return hours + 'h ago';
-        const days = Math.floor(hours / 24);
-        if (days < 7) return days + 'd ago';
-        if (days < 30) return Math.floor(days / 7) + 'w ago';
-        if (days < 365) return Math.floor(days / 30) + 'mo ago';
-        return Math.floor(days / 365) + 'y ago';
+    getRelativeTime(value: any): string {
+        return sharedGetRelativeTime(value);
     }
 
     // Management Methods

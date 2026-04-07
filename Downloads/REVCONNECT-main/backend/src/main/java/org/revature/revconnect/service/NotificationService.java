@@ -186,6 +186,8 @@ public class NotificationService {
             case NEW_FOLLOWER -> Boolean.TRUE.equals(settings.getNotifyNewFollower());
             case CONNECTION_REQUEST -> Boolean.TRUE.equals(settings.getNotifyConnectionRequest());
             case CONNECTION_ACCEPTED -> Boolean.TRUE.equals(settings.getNotifyConnectionAccepted());
+            case COLLABORATION_INVITE, COLLABORATION_ACCEPTED, COLLABORATION_REJECTED,
+                 COLLABORATION_REVOKED, PROMOTION_GRANTED, PROMOTION_REVOKED -> true;
         };
     }
 }

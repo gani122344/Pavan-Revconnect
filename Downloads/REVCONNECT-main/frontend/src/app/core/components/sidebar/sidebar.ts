@@ -72,6 +72,8 @@ export class Sidebar implements OnInit {
     { icon: 'fa-bell', label: 'Notifications', link: '/notifications', active: false },
     { icon: 'fa-envelope', label: 'Messages', link: '/messages', active: false },
     { icon: 'fa-bookmark', label: 'Bookmarks', link: '/bookmarks', active: false },
+    { icon: 'fa-wallet', label: 'Wallet', link: '/wallet', active: false },
+    { icon: 'fa-handshake', label: 'Collaborations', link: '/collaborations', active: false },
     { icon: 'fa-chart-line', label: 'Analytics', link: '/analytics', active: false },
     { icon: 'fa-user', label: 'Profile', link: '/profile', active: false },
     { icon: 'fa-gear', label: 'Settings', link: '/settings', active: false }
@@ -79,7 +81,7 @@ export class Sidebar implements OnInit {
 
   get filteredMenuItems() {
     return this.menuItems.filter(item => {
-      if (item.label === 'Analytics') {
+      if (item.label === 'Analytics' || item.label === 'Collaborations') {
         return this.currentUser?.userType === 'CREATOR' || this.currentUser?.userType === 'BUSINESS';
       }
       return true;

@@ -62,7 +62,7 @@
                         <!-- Chat Header -->
                         <div class="chat-header">
                             <button class="mobile-back-btn"
-                                (click)="selectedConversation = null; $event.stopPropagation()">
+                                (click)="goBackToList(); $event.stopPropagation()">
                                 <i class="fa-solid fa-arrow-left"></i>
                             </button>
                             <img [src]="getAvatarUrl(selectedConversation)" alt="{{selectedConversation.name}}">
@@ -71,6 +71,10 @@
                                 <span>&#64;{{selectedConversation.username}}</span>
                             </div>
                             <div class="chat-header-actions">
+                                <button class="call-btn pay-btn" *ngIf="currentUserType === 'BUSINESS' || currentUserType === 'CREATOR'"
+                                    (click)="router.navigate(['/wallet'], {queryParams: {sendTo: selectedConversation?.userId}})" title="Send Payment">
+                                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                                </button>
                                 <button class="call-btn" (click)="startAudioCall()" title="Audio Call">
                                     <i class="fa-solid fa-phone"></i>
                                 </button>
@@ -87,55 +91,138 @@
                             </div>
 
                             <ng-container *ngIf="!isLoadingMessages">
-                                <div class="message-bubble" *ngFor="let msg of messages" [class.mine]="isMine(msg)"
-                                    [class.theirs]="!isMine(msg)"
-                                    (contextmenu)="openContextMenu($event, msg)">
-                                    <!-- Edit Mode -->
-                                    <ng-container *ngIf="editingMessageId === msg.id">
-                                        <div class="bubble-edit" style="display:flex;gap:0.5rem;align-items:center;">
-                                            <input class="chat-input" style="flex:1;padding:0.4rem 0.7rem;font-size:0.9rem;"
-                                                [(ngModel)]="editingContent" (keyup.enter)="saveEditMessage(msg)" (keyup.escape)="cancelEditMessage()">
-                                            <button class="btn-primary" style="padding:0.35rem 0.75rem;font-size:0.8rem;" (click)="saveEditMessage(msg)">Save</button>
-                                            <button class="btn-secondary" style="padding:0.35rem 0.75rem;font-size:0.8rem;" (click)="cancelEditMessage()">Cancel</button>
+                                <ng-container *ngFor="let msg of messages">
+
+                                    <!-- Call Event Message -->
+                                    <div class="call-event-bubble" *ngIf="isCallEvent(msg)">
+                                        <div class="call-event-card">
+                                            <div class="call-event-icon" [ngClass]="getCallEventData(msg).status">
+                                                <i class="fa-solid" [ngClass]="getCallEventData(msg).type === 'video' ? 'fa-video' : 'fa-phone'"
+                                                    [class.fa-phone-slash]="getCallEventData(msg).status === 'missed'"></i>
+                                            </div>
+                                            <div class="call-event-info">
+                                                <span class="call-event-label">
+                                                    {{ isMine(msg) ? 'Outgoing' : 'Incoming' }}
+                                                    {{ getCallEventData(msg).type === 'video' ? 'video' : 'voice' }} call
+                                                </span>
+                                                <span class="call-event-detail" *ngIf="getCallEventData(msg).status === 'missed'">
+                                                    Missed
+                                                </span>
+                                                <span class="call-event-detail" *ngIf="getCallEventData(msg).status === 'cancelled'">
+                                                    Cancelled
+                                                </span>
+                                                <span class="call-event-detail" *ngIf="getCallEventData(msg).status === 'ended' && getCallEventData(msg).duration > 0">
+                                                    {{ formatCallDuration(getCallEventData(msg).duration) }}
+                                                </span>
+                                                <span class="call-event-detail" *ngIf="getCallEventData(msg).status === 'ended' && getCallEventData(msg).duration === 0">
+                                                    Ended
+                                                </span>
+                                            </div>
+                                            <span class="call-event-time">{{ getRelativeTime(msg.timestamp) }}</span>
                                         </div>
-                                    </ng-container>
-                                    <!-- View Mode -->
-                                    <ng-container *ngIf="editingMessageId !== msg.id">
-                                        <div class="msg-hover-actions" *ngIf="isMine(msg)">
-                                            <button class="msg-action-btn" (click)="contextMenuMessage = msg; startEditMessage()" title="Edit">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </button>
-                                            <button class="msg-action-btn msg-action-delete" (click)="contextMenuMessage = msg; deleteMessage()" title="Delete">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </div>
-                                        <div class="bubble-content" *ngIf="!isSharedPost(msg)">
-                                            <img *ngIf="msg.mediaUrl" [src]="msg.mediaUrl" alt="Photo" class="msg-image">
-                                            <p *ngIf="msg.content" [innerHTML]="msg.content | linkify"></p>
-                                            <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
-                                        </div>
-                                        <div class="bubble-content shared-post-card" *ngIf="isSharedPost(msg)">
-                                            <ng-container *ngIf="getSharedPostData(msg) as sp">
-                                                <div class="shared-post-label">
-                                                    <i class="fa-solid fa-share"></i> Shared Post
-                                                </div>
-                                                <div class="shared-post-author" *ngIf="sp.authorUsername">
-                                                    <img [src]="sp.authorPic || 'https://ui-avatars.com/api/?name=' + sp.authorName + '&background=random&size=64'" alt="">
-                                                    <div>
-                                                        <strong>{{sp.authorName}}</strong>
-                                                        <span>&#64;{{sp.authorUsername}}</span>
+                                    </div>
+
+                                    <!-- Regular Message -->
+                                    <div class="message-bubble" *ngIf="!isCallEvent(msg)" [class.mine]="isMine(msg)"
+                                        [class.theirs]="!isMine(msg)"
+                                        (contextmenu)="openContextMenu($event, msg)">
+                                        <!-- Edit Mode -->
+                                        <ng-container *ngIf="editingMessageId === msg.id">
+                                            <div class="bubble-edit" style="display:flex;gap:0.5rem;align-items:center;">
+                                                <input class="chat-input" style="flex:1;padding:0.4rem 0.7rem;font-size:0.9rem;"
+                                                    [(ngModel)]="editingContent" (keyup.enter)="saveEditMessage(msg)" (keyup.escape)="cancelEditMessage()">
+                                                <button class="btn-primary" style="padding:0.35rem 0.75rem;font-size:0.8rem;" (click)="saveEditMessage(msg)">Save</button>
+                                                <button class="btn-secondary" style="padding:0.35rem 0.75rem;font-size:0.8rem;" (click)="cancelEditMessage()">Cancel</button>
+                                            </div>
+                                        </ng-container>
+                                        <!-- View Mode -->
+                                        <ng-container *ngIf="editingMessageId !== msg.id">
+                                            <div class="msg-hover-actions" *ngIf="isMine(msg)">
+                                                <button class="msg-action-btn" (click)="contextMenuMessage = msg; startEditMessage()" title="Edit">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button class="msg-action-btn msg-action-delete" (click)="contextMenuMessage = msg; deleteMessage()" title="Delete">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            <div class="bubble-content location-msg" *ngIf="isLocationMessage(msg)">
+                                                <a [href]="'https://www.google.com/maps?q=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng" target="_blank" rel="noopener" class="location-map-link">
+                                                    <div class="location-map-container">
+                                                        <img [src]="'https://staticmap.openstreetmap.de/staticmap.php?center=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng + '&zoom=15&size=400x200&maptype=mapnik&markers=' + getLocationCoords(msg).lat + ',' + getLocationCoords(msg).lng + ',lightblue1'"
+                                                            onerror="this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'"
+                                                            alt="Location" class="location-map-img">
                                                     </div>
+                                                    <div class="location-fallback-map" style="display:none">
+                                                        <i class="fa-solid fa-map-location-dot"></i>
+                                                        <span>📍 Shared Location</span>
+                                                        <small>{{getLocationCoords(msg).lat.toFixed(5)}}, {{getLocationCoords(msg).lng.toFixed(5)}}</small>
+                                                    </div>
+                                                </a>
+                                                <div class="location-bottom-bar">
+                                                    <div class="location-info">
+                                                        <i class="fa-solid fa-location-dot" style="color:#ef4444"></i>
+                                                        <div>
+                                                            <span class="location-title">Shared Location</span>
+                                                            <small class="location-coords">{{getLocationCoords(msg).lat.toFixed(5)}}, {{getLocationCoords(msg).lng.toFixed(5)}}</small>
+                                                        </div>
+                                                    </div>
+                                                    <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
                                                 </div>
-                                                <p class="shared-post-text" *ngIf="sp.content">{{sp.content}}</p>
-                                                <img *ngIf="sp.mediaUrl" [src]="sp.mediaUrl" class="shared-post-img" alt="Post image">
-                                                <a class="shared-post-link" [href]="sp.postUrl" *ngIf="sp.postUrl">View Post</a>
-                                            </ng-container>
-                                            <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
-                                        </div>
-                                        <i class="fa-solid fa-check-double read-indicator" *ngIf="isMine(msg)"
-                                            [style.color]="msg.isRead ? '#3b82f6' : 'var(--text-muted)'"></i>
-                                    </ng-container>
-                                </div>
+                                            </div>
+                                            <div class="bubble-content" *ngIf="!isSharedPost(msg) && !isLocationMessage(msg) && !isVoiceMessage(msg) && !isDocumentMessage(msg)">
+                                                <img *ngIf="msg.mediaUrl" [src]="msg.mediaUrl" alt="Photo" class="msg-image" (click)="openLightbox(msg.mediaUrl!); $event.stopPropagation()">
+                                                <p *ngIf="msg.content" [innerHTML]="msg.content | linkify"></p>
+                                                <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
+                                            </div>
+                                            <!-- Voice message -->
+                                            <div class="bubble-content voice-msg" *ngIf="isVoiceMessage(msg)">
+                                                <div class="voice-msg-row">
+                                                    <button class="voice-play-btn" (click)="togglePlayVoice(msg)">
+                                                        <i [class]="playingVoiceId === msg.id ? 'fa-solid fa-pause' : 'fa-solid fa-play'"></i>
+                                                    </button>
+                                                    <div class="voice-waveform">
+                                                        <div class="voice-bar" *ngFor="let h of voiceWaveformBars" [style.height.px]="h"></div>
+                                                    </div>
+                                                    <span class="voice-duration">{{getVoiceDuration(msg)}}</span>
+                                                </div>
+                                                <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
+                                            </div>
+                                            <!-- Document message -->
+                                            <div class="bubble-content doc-msg" *ngIf="isDocumentMessage(msg)">
+                                                <a (click)="downloadDocument(msg); $event.preventDefault()" href="javascript:void(0)" class="doc-msg-link">
+                                                    <div class="doc-icon-wrap"><i class="fa-solid fa-file-lines"></i></div>
+                                                    <div class="doc-info">
+                                                        <span class="doc-name">{{getDocumentName(msg)}}</span>
+                                                        <small class="doc-size">Document</small>
+                                                    </div>
+                                                    <i class="fa-solid fa-download doc-download"></i>
+                                                </a>
+                                                <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
+                                            </div>
+                                            <div class="bubble-content shared-post-card" *ngIf="isSharedPost(msg)">
+                                                <ng-container *ngIf="getSharedPostData(msg) as sp">
+                                                    <div class="shared-post-label">
+                                                        <i class="fa-solid fa-share"></i> Shared Post
+                                                    </div>
+                                                    <div class="shared-post-author" *ngIf="sp.authorUsername">
+                                                        <img [src]="sp.authorPic || 'https://ui-avatars.com/api/?name=' + sp.authorName + '&background=random&size=64'" alt="">
+                                                        <div>
+                                                            <strong>{{sp.authorName}}</strong>
+                                                            <span>&#64;{{sp.authorUsername}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <p class="shared-post-text" *ngIf="sp.content">{{sp.content}}</p>
+                                                    <img *ngIf="sp.mediaUrl" [src]="sp.mediaUrl" class="shared-post-img" alt="Post image">
+                                                    <a class="shared-post-link" [href]="sp.postUrl" *ngIf="sp.postUrl">View Post</a>
+                                                </ng-container>
+                                                <span class="msg-time">{{getRelativeTime(msg.timestamp)}}</span>
+                                            </div>
+                                            <i class="fa-solid fa-check-double read-indicator" *ngIf="isMine(msg)"
+                                                [style.color]="msg.isRead ? '#3b82f6' : 'var(--text-muted)'"></i>
+                                        </ng-container>
+                                    </div>
+
+                                </ng-container>
 
                                 <div class="no-messages" *ngIf="messages.length === 0">
                                     <p>No messages yet. Say hello! 👋</p>
@@ -174,10 +261,23 @@
                             </button>
                         </div>
 
+                        <!-- Voice Recording Indicator -->
+                        <div class="voice-recording-bar" *ngIf="isRecording">
+                            <div class="recording-pulse"></div>
+                            <span class="recording-label">Recording... {{recordingTime}}s</span>
+                            <button class="recording-cancel-btn" (click)="cancelRecording()">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                            <button class="recording-send-btn" (click)="stopAndSendRecording()">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+
                         <!-- Message Input -->
-                        <div class="chat-input-area">
-                            <!-- Hidden file input -->
+                        <div class="chat-input-area" *ngIf="!isRecording">
+                            <!-- Hidden file inputs -->
                             <input type="file" #photoInput style="display:none" accept="image/*" (change)="onPhotoSelected($event)">
+                            <input type="file" #docInput style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.csv" (change)="onDocumentSelected($event)">
                             <button class="emoji-btn" (click)="toggleEmojiPicker()" type="button"
                                 style="background: none; border: none; cursor: pointer; font-size: 1.3rem; padding: 0.4rem 0.5rem; color: var(--text-secondary); border-radius: 8px; transition: background 0.15s;"
                                 title="Emojis">
@@ -189,14 +289,41 @@
                                 <i class="fa-solid fa-circle-notch fa-spin" *ngIf="isUploadingPhoto"></i>
                                 <i class="fa-regular fa-image" *ngIf="!isUploadingPhoto"></i>
                             </button>
+                            <button type="button" (click)="docInput.click()" [disabled]="isUploadingDoc"
+                                style="background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 0.4rem 0.5rem; color: var(--text-secondary); border-radius: 8px; transition: background 0.15s;"
+                                title="Send document">
+                                <i class="fa-solid fa-circle-notch fa-spin" *ngIf="isUploadingDoc"></i>
+                                <i class="fa-solid fa-paperclip" *ngIf="!isUploadingDoc"></i>
+                            </button>
+                            <button type="button" (click)="sendCurrentLocation()" [disabled]="isSendingLocation"
+                                style="background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 0.4rem 0.5rem; color: var(--text-secondary); border-radius: 8px; transition: background 0.15s;"
+                                title="Send location">
+                                <i class="fa-solid fa-circle-notch fa-spin" *ngIf="isSendingLocation"></i>
+                                <i class="fa-solid fa-location-dot" *ngIf="!isSendingLocation"></i>
+                            </button>
                             <input type="text" class="chat-input" [(ngModel)]="newMessage"
                                 placeholder="Type a message..." (keyup.enter)="sendMessage()" [disabled]="isSending"
                                 (focus)="showEmojiPicker = false">
                             <button class="send-btn btn-primary" (click)="sendMessage()"
+                                *ngIf="newMessage.trim() || pendingMediaUrl"
                                 [disabled]="(!newMessage.trim() && !pendingMediaUrl) || isSending">
                                 <i class="fa-solid fa-paper-plane" *ngIf="!isSending"></i>
                                 <i class="fa-solid fa-circle-notch fa-spin" *ngIf="isSending"></i>
                             </button>
+                            <button class="voice-rec-btn" (click)="startRecording()"
+                                *ngIf="!newMessage.trim() && !pendingMediaUrl"
+                                [disabled]="isSending"
+                                style="background: none; border: none; cursor: pointer; font-size: 1.3rem; padding: 0.4rem 0.5rem; color: var(--text-secondary); border-radius: 8px; transition: background 0.15s;"
+                                title="Record voice message">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+
+                        <!-- Image Lightbox Overlay -->
+                        <div class="lightbox-overlay" *ngIf="lightboxVisible" (click)="closeLightbox()">
+                            <div class="lightbox-content" (click)="$event.stopPropagation()">
+                                <img [src]="lightboxImageUrl" alt="Image" class="lightbox-image">
+                            </div>
                         </div>
                     </ng-container>
                 </div>
@@ -223,43 +350,83 @@
 
 <!-- Call Overlay -->
 <div class="call-overlay" *ngIf="callState?.active">
-    <!-- Incoming call ringing -->
-    <div class="call-card" *ngIf="callState?.status === 'ringing' && callState?.direction === 'incoming'">
-        <div class="call-pulse-ring"></div>
-        <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
-            class="call-avatar" alt="Caller">
-        <h3 class="call-name">{{callState?.remoteName}}</h3>
-        <p class="call-status">Incoming {{callState?.callType}} call...</p>
-        <div class="call-actions">
+
+    <!-- ══ RINGING: Incoming call ══ -->
+    <div class="call-ringing-fullscreen" *ngIf="callState?.status === 'ringing' && callState?.direction === 'incoming'">
+        <div class="ringing-bg"></div>
+        <div class="ringing-content">
+            <div class="ringing-avatar-area">
+                <div class="call-pulse-ring"></div>
+                <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
+                    class="call-avatar" alt="Caller">
+            </div>
+            <h3 class="call-name">{{callState?.remoteName}}</h3>
+            <p class="call-status">Incoming {{callState?.callType}} call...</p>
+        </div>
+        <div class="call-actions ringing-actions">
             <button class="call-action-btn reject" (click)="callService.rejectCall()">
                 <i class="fa-solid fa-phone-slash"></i>
+                <span>Decline</span>
             </button>
             <button class="call-action-btn accept" (click)="callService.acceptCall()">
                 <i class="fa-solid fa-phone"></i>
+                <span>Accept</span>
             </button>
         </div>
     </div>
 
-    <!-- Outgoing call ringing -->
-    <div class="call-card" *ngIf="callState?.status === 'ringing' && callState?.direction === 'outgoing'">
-        <div class="call-pulse-ring"></div>
-        <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
-            class="call-avatar" alt="Callee">
-        <h3 class="call-name">{{callState?.remoteName}}</h3>
-        <p class="call-status">Calling...</p>
-        <div class="call-actions">
+    <!-- ══ RINGING: Outgoing video call — show local camera preview ══ -->
+    <div class="call-ringing-fullscreen" *ngIf="callState?.status === 'ringing' && callState?.direction === 'outgoing' && callState?.callType === 'video'">
+        <video class="ringing-local-preview local-mirror" #localVideo autoplay playsinline muted></video>
+        <div class="ringing-overlay-gradient"></div>
+        <div class="ringing-content">
+            <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
+                class="call-avatar ringing-small-avatar" alt="Callee">
+            <h3 class="call-name">{{callState?.remoteName}}</h3>
+            <p class="call-status">Ringing...</p>
+        </div>
+        <div class="call-actions ringing-actions">
             <button class="call-action-btn reject" (click)="callService.endCall()">
                 <i class="fa-solid fa-phone-slash"></i>
+                <span>Cancel</span>
             </button>
         </div>
     </div>
 
-    <!-- Connected call -->
+    <!-- ══ RINGING: Outgoing audio call ══ -->
+    <div class="call-ringing-fullscreen" *ngIf="callState?.status === 'ringing' && callState?.direction === 'outgoing' && callState?.callType === 'audio'">
+        <div class="ringing-bg"></div>
+        <div class="ringing-content">
+            <div class="ringing-avatar-area">
+                <div class="call-pulse-ring"></div>
+                <img [src]="callState?.remotePic || 'https://ui-avatars.com/api/?name=' + (callState?.remoteName || '') + '&background=random&size=128'"
+                    class="call-avatar" alt="Callee">
+            </div>
+            <h3 class="call-name">{{callState?.remoteName}}</h3>
+            <p class="call-status">Calling...</p>
+        </div>
+        <div class="call-actions ringing-actions">
+            <button class="call-action-btn reject" (click)="callService.endCall()">
+                <i class="fa-solid fa-phone-slash"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ CONNECTED / CONNECTING ══ -->
     <div class="call-connected" *ngIf="callState?.status === 'connecting' || callState?.status === 'connected'">
         <!-- Video streams -->
         <div class="video-container" *ngIf="callState?.callType === 'video'">
-            <video class="remote-video" #remoteVideo autoplay playsinline></video>
-            <video class="local-video" #localVideo autoplay playsinline muted></video>
+            <video [class]="videoSwapped ? 'pip-video' : 'remote-video'" #remoteVideo autoplay playsinline
+                   (click)="videoSwapped ? toggleVideoSwap() : null"
+                   [style.left.px]="videoSwapped ? pipX : null"
+                   [style.top.px]="videoSwapped ? pipY : null"
+                   (pointerdown)="videoSwapped ? onPipPointerDown($event) : null"></video>
+            <video [class]="(videoSwapped ? 'remote-video' : 'pip-video') + ' local-mirror'" #localVideo autoplay playsinline muted
+                   (click)="!videoSwapped ? toggleVideoSwap() : null"
+                   [style.left.px]="!videoSwapped ? pipX : null"
+                   [style.top.px]="!videoSwapped ? pipY : null"
+                   (pointerdown)="!videoSwapped ? onPipPointerDown($event) : null"></video>
             <div class="video-info-overlay">
                 <span class="video-name">{{callState?.remoteName}}</span>
                 <span class="video-duration" *ngIf="callState?.duration !== undefined">
@@ -284,6 +451,9 @@
         <div class="call-controls">
             <button class="control-btn" [class.active]="callState?.isMuted" (click)="callService.toggleMute()" title="Mute">
                 <i class="fa-solid" [ngClass]="callState?.isMuted ? 'fa-microphone-slash' : 'fa-microphone'"></i>
+            </button>
+            <button class="control-btn" [class.active]="!callState?.isSpeakerOn" (click)="callService.toggleSpeaker()" title="Speaker">
+                <i class="fa-solid" [ngClass]="callState?.isSpeakerOn ? 'fa-volume-high' : 'fa-volume-xmark'"></i>
             </button>
             <button class="control-btn" *ngIf="callState?.callType === 'video'"
                 [class.active]="callState?.isCameraOff" (click)="callService.toggleCamera()" title="Camera">

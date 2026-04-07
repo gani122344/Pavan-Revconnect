@@ -636,7 +636,61 @@ app-stories-feed {
 }
 
 /* ---------------------------------- */
-/* Song Badge on Post Cards */
+/* Instagram-style Song Label + Audio Toggle */
+/* ---------------------------------- */
+.post-song-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    margin-top: 1px;
+}
+.post-song-label i {
+    font-size: 0.65rem;
+    color: var(--text-muted, #94a3b8);
+}
+.post-song-label span {
+    font-size: 0.72rem;
+    color: var(--text-muted, #94a3b8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+.post-song-label:hover span {
+    color: var(--text-secondary, #cbd5e1);
+}
+
+.post-media-wrap {
+    position: relative;
+    overflow: hidden;
+}
+.post-audio-toggle {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    z-index: 3;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s, transform 0.15s;
+}
+.post-audio-toggle:hover {
+    background: rgba(0, 0, 0, 0.75);
+    transform: scale(1.1);
+}
+
+/* ---------------------------------- */
+/* Song Badge on Post Cards (legacy) */
 /* ---------------------------------- */
 .post-media-wrapper {
     position: relative;
@@ -1200,12 +1254,13 @@ app-stories-feed {
 
 .post-card .post-content .post-image {
     width: 100%;
-    max-height: 400px;
+    max-height: 600px;
     height: auto;
-    object-fit: cover;
+    object-fit: contain;
     border-radius: var(--radius-md);
     margin-top: 0.75rem;
     border: 1px solid var(--border-light);
+    background: #000;
 }
 
 .post-card .post-content .post-cta {
@@ -1985,3 +2040,84 @@ app-stories-feed {
     border-color: rgba(139, 92, 246, 0.2);
     box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.08), var(--shadow-sm);
 }
+
+/* ---- Song picker in edit mode (inside .post-card) ---- */
+.post-card .song-library-panel {
+    margin: 0.5rem 0 0;
+    border-radius: 10px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+    overflow: hidden;
+    animation: slideDownIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.post-card .song-library-header {
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--border-light);
+}
+.post-card .song-search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-primary); border: 1px solid var(--border-light);
+    border-radius: 8px; padding: 6px 10px; transition: border-color 0.2s;
+}
+.post-card .song-search-box:focus-within { border-color: #1db954; }
+.post-card .song-search-box i { color: var(--text-muted); font-size: 0.8rem; }
+.post-card .song-search-box input {
+    border: none; outline: none; background: transparent;
+    font-size: 0.85rem; color: var(--text-primary); width: 100%; font-family: inherit;
+}
+.post-card .song-search-box input::placeholder { color: var(--text-muted); }
+.post-card .genre-filter-row {
+    display: flex; gap: 6px; margin-top: 8px; overflow-x: auto;
+    scrollbar-width: none; padding-bottom: 4px;
+}
+.post-card .genre-filter-row::-webkit-scrollbar { display: none; }
+.post-card .genre-chip {
+    padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-light);
+    background: transparent; color: var(--text-secondary); font-size: 0.72rem;
+    font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-family: inherit;
+}
+.post-card .genre-chip:hover { border-color: #1db954; color: #1db954; }
+.post-card .genre-chip.active { background: #1db954; border-color: #1db954; color: white; }
+.post-card .song-library-list { max-height: 240px; overflow-y: auto; scrollbar-width: thin; }
+.post-card .song-list-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    cursor: pointer; transition: background 0.15s;
+}
+.post-card .song-list-item:hover { background: rgba(29, 185, 84, 0.08); }
+.post-card .song-cover { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+.post-card .song-meta { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.post-card .song-name {
+    font-weight: 600; font-size: 0.85rem; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.post-card .song-artist { font-size: 0.75rem; color: var(--text-secondary); }
+.post-card .song-genre-tag {
+    font-size: 0.65rem; font-weight: 600; color: #1db954;
+    background: rgba(29, 185, 84, 0.1); padding: 2px 8px; border-radius: 10px;
+    white-space: nowrap; flex-shrink: 0;
+}
+.post-card .no-songs-found {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; padding: 24px; color: var(--text-muted); font-size: 0.85rem;
+}
+.post-card .no-songs-found i { font-size: 1.5rem; }
+.post-card .edit-song-section .selected-song-chip {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    margin-top: 8px; background: rgba(29, 185, 84, 0.06);
+    border: 1px solid rgba(29, 185, 84, 0.2); border-radius: 10px;
+}
+.post-card .edit-song-section .song-chip-info {
+    flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0;
+}
+.post-card .edit-song-section .song-chip-title {
+    font-weight: 600; font-size: 0.85rem; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.post-card .edit-song-section .song-chip-artist { font-size: 0.75rem; color: var(--text-secondary); }
+.post-card .edit-song-section .song-chip-remove {
+    background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444;
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; cursor: pointer;
+    font-size: 0.8rem; transition: background 0.2s; flex-shrink: 0;
+}
+.post-card .edit-song-section .song-chip-remove:hover { background: rgba(239, 68, 68, 0.25); }

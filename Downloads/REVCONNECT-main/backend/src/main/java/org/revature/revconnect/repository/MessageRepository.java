@@ -14,9 +14,9 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-        @Query("SELECT m FROM Message m WHERE " +
+        @Query("SELECT m FROM Message m WHERE m.isDeleted = false AND (" +
                         "(m.sender = :user1 AND m.receiver = :user2) OR " +
-                        "(m.sender = :user2 AND m.receiver = :user1) " +
+                        "(m.sender = :user2 AND m.receiver = :user1)) " +
                         "ORDER BY m.timestamp DESC")
         Page<Message> findConversation(@Param("user1") User user1, @Param("user2") User user2, Pageable pageable);
 

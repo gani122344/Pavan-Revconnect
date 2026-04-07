@@ -161,6 +161,13 @@ public class BusinessController {
         return ResponseEntity.ok(ApiResponse.success("Showcase item removed", businessService.removeShowcaseItem(index)));
     }
 
+    @GetMapping("/showcase/{userId}")
+    @Operation(summary = "Get showcase items for a specific business user")
+    public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, Object>>>> getShowcaseByUser(
+            @PathVariable Long userId) {
+        return ResponseEntity.ok(ApiResponse.success(businessService.getShowcaseByUserId(userId)));
+    }
+
     @GetMapping("/pages/me")
     @Operation(summary = "Get my business page")
     public ResponseEntity<ApiResponse<BusinessProfileResponse>> getMyPage() {

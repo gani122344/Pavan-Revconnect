@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Navbar } from '../../../core/components/navbar/navbar';
 import { Sidebar } from '../../../core/components/sidebar/sidebar';
@@ -8,6 +8,7 @@ import { UserService, UserResponse } from '../../../core/services/user.service';
 import { ConnectionService } from '../../../core/services/connection.service';
 import { RouterModule, Router } from '@angular/router';
 import { BottomNav } from '../../../core/components/bottom-nav/bottom-nav';
+import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
 
 @Component({
   selector: 'app-notifications-page',
@@ -17,11 +18,12 @@ import { BottomNav } from '../../../core/components/bottom-nav/bottom-nav';
   templateUrl: './notifications-page.html',
   styleUrls: ['./notifications-page.css']
 })
-export class NotificationsPage implements OnInit {
+export class NotificationsPage implements OnInit, OnDestroy {
   notifications: any[] = [];
   isLoading = false;
   page = 0;
   totalPages = 1;
+  private timestampRefreshSub: any;
 
   constructor(
     private notificationService: NotificationService,
@@ -34,6 +36,14 @@ export class NotificationsPage implements OnInit {
 
   ngOnInit() {
     this.loadNotifications();
+    // Periodically trigger change detection so relative timestamps update
+    this.timestampRefreshSub = setInterval(() => {
+      this.cdr.detectChanges();
+    }, 30000);
+  }
+
+  ngOnDestroy() {
+    if (this.timestampRefreshSub) clearInterval(this.timestampRefreshSub);
   }
 
   viewProfile(userId: number) {
@@ -153,22 +163,7 @@ export class NotificationsPage implements OnInit {
     }
   }
 
-  getRelativeTime(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    const now = new Date();
-    const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
-
-    if (seconds < 60) return 'just now';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return minutes + 'm ago';
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return hours + 'h ago';
-    const days = Math.floor(hours / 24);
-    if (days < 7) return days + 'd ago';
-    if (days < 30) return Math.floor(days / 7) + 'w ago';
-    if (days < 365) return Math.floor(days / 30) + 'mo ago';
-    return Math.floor(days / 365) + 'y ago';
+  getRelativeTime(value: any): string {
+    return sharedGetRelativeTime(value);
   }
 }

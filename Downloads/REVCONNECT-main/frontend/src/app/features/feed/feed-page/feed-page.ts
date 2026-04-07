@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Navbar } from '../../../core/components/navbar/navbar';
@@ -18,6 +18,7 @@ import { ConnectionService } from '../../../core/services/connection.service';
 import { MessageService } from '../../../core/services/message.service';
 import { SONG_LIBRARY, SONG_GENRES, Song } from '../../../shared/data/songs.data';
 import { AudioPlayerService } from '../../../core/services/audio-player.service';
+import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
 
 @Component({
   selector: 'app-feed-page',
@@ -26,7 +27,9 @@ import { AudioPlayerService } from '../../../core/services/audio-player.service'
   templateUrl: './feed-page.html',
   styleUrls: ['./feed-page.css']
 })
-export class FeedPage implements OnInit {
+export class FeedPage implements OnInit, AfterViewInit, OnDestroy {
+  private viewObserver?: IntersectionObserver;
+  private viewedPostIds = new Set<number>();
   posts: PostResponse[] = [];
   newPostContent = '';
   selectedMediaFile: File | null = null;
@@ -201,6 +204,36 @@ export class FeedPage implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.setupViewObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.viewObserver?.disconnect();
+  }
+
+  private setupViewObserver(): void {
+    this.viewObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const postId = Number((entry.target as HTMLElement).dataset['postId']);
+          if (postId && !this.viewedPostIds.has(postId)) {
+            this.viewedPostIds.add(postId);
+            this.postService.recordView(postId).subscribe();
+          }
+        }
+      });
+    }, { threshold: 0.5 });
+  }
+
+  observePost(el: HTMLElement, postId: number): void {
+    if (this.viewObserver && el && !el.dataset['observed']) {
+      el.dataset['postId'] = String(postId);
+      el.dataset['observed'] = '1';
+      this.viewObserver.observe(el);
+    }
+  }
+
   loadTrending() {
     this.searchService.getTrendingHashtags(5).subscribe({
       next: (res) => {
@@ -306,15 +339,34 @@ export class FeedPage implements OnInit {
     }
   }
 
+  // Song editing during post edit
+  editSong: Song | null = null;
+  editSongRemoved = false;
+  showEditMusicPicker = false;
+
   editPost(post: PostResponse) {
     this.editingPostId = post.id;
     this.editPostContent = post.content;
+    this.editSongRemoved = false;
+    this.showEditMusicPicker = false;
+    if (post.songTitle) {
+      this.editSong = this.allSongs.find(s => s.title === post.songTitle) || { title: post.songTitle, artist: post.songArtist || '', genre: '', coverUrl: '' };
+    } else {
+      this.editSong = null;
+    }
     this.postOptionsOpenMap[post.id] = false;
   }
 
   savePostEdit(postId: number) {
-    if (!this.editPostContent.trim()) return;
-    this.postService.updatePost(postId, { content: this.editPostContent }).subscribe({
+    const req: any = { content: this.editPostContent || '' };
+    if (this.editSongRemoved) {
+      req.songTitle = '';
+      req.songArtist = '';
+    } else if (this.editSong) {
+      req.songTitle = this.editSong.title;
+      req.songArtist = this.editSong.artist;
+    }
+    this.postService.updatePost(postId, req).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           const idx = this.posts.findIndex(p => p.id === postId);
@@ -322,15 +374,41 @@ export class FeedPage implements OnInit {
             this.posts[idx] = res.data;
           }
           this.editingPostId = null;
+          this.editSong = null;
+          this.editSongRemoved = false;
+          this.showEditMusicPicker = false;
           this.cdr.markForCheck();
+        } else {
+          console.error('Post update failed:', res);
+          alert('Failed to save post. Please try again.');
         }
+      },
+      error: (err) => {
+        console.error('Error updating post:', err);
+        alert('Failed to save post: ' + (err.error?.message || err.message || 'Unknown error'));
       }
     });
+  }
+
+  selectEditSong(song: Song) {
+    this.editSong = song;
+    this.editSongRemoved = false;
+    this.showEditMusicPicker = false;
+    this.cdr.markForCheck();
+  }
+
+  removeEditSong() {
+    this.editSong = null;
+    this.editSongRemoved = true;
+    this.cdr.markForCheck();
   }
 
   cancelEdit() {
     this.editingPostId = null;
     this.editPostContent = '';
+    this.editSong = null;
+    this.editSongRemoved = false;
+    this.showEditMusicPicker = false;
   }
 
   togglePin(postId: number) {
@@ -942,23 +1020,8 @@ export class FeedPage implements OnInit {
     this.toggleLike(postId);
   }
 
-  getRelativeTime(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    const now = new Date();
-    const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
-
-    if (seconds < 60) return 'just now';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return minutes + 'm ago';
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return hours + 'h ago';
-    const days = Math.floor(hours / 24);
-    if (days < 7) return days + 'd ago';
-    if (days < 30) return Math.floor(days / 7) + 'w ago';
-    if (days < 365) return Math.floor(days / 30) + 'mo ago';
-    return Math.floor(days / 365) + 'y ago';
+  getRelativeTime(value: any): string {
+    return sharedGetRelativeTime(value);
   }
 }
 

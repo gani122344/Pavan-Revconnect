@@ -347,7 +347,7 @@ export class StoriesFeed implements OnInit, OnDestroy {
     this.clearStoryTimer();
     this.storyProgress = 0;
     this.storyPaused = false;
-    const duration = 10000; // 10 seconds per story
+    const duration = this.activeStoryToView?.songTitle ? 30000 : 10000; // 30s with music, 10s without
     const interval = 50;
     this.storyProgressTimer = setInterval(() => {
       if (this.storyPaused) return;

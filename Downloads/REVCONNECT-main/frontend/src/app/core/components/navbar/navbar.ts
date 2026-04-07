@@ -8,6 +8,7 @@ import { UserService, UserResponse } from '../../services/user.service';
 import { FormsModule } from '@angular/forms';
 import { interval, Subscription } from 'rxjs';
 import { BottomNav } from '../bottom-nav/bottom-nav';
+import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
 
 @Component({
   selector: 'app-navbar',
@@ -231,18 +232,8 @@ export class Navbar implements OnInit, OnDestroy {
     return colors[type] || '#64748b';
   }
 
-  getRelativeTime(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
-    if (seconds < 60) return 'just now';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return minutes + 'm';
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return hours + 'h';
-    const days = Math.floor(hours / 24);
-    return days + 'd';
+  getRelativeTime(value: any): string {
+    return sharedGetRelativeTime(value);
   }
 
   onSearch() {

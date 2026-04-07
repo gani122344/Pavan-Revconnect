@@ -8,12 +8,16 @@
                 </div>
                 <span class="brand-text">RevConnect</span>
             </div>
-            <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#about">Network</a>
+            <div class="nav-links" [class.open]="mobileMenuOpen">
+                <a (click)="scrollToSection('features')">Features</a>
+                <a (click)="scrollToSection('download')">Download</a>
+                <a (click)="scrollToSection('how-it-works')">How It Works</a>
                 <button class="btn-glass" [routerLink]="['/login']">Sign In</button>
                 <button class="btn-primary-glow" [routerLink]="['/register']">Join Now</button>
             </div>
+            <button class="mobile-menu-btn" (click)="mobileMenuOpen = !mobileMenuOpen">
+                <i class="fa-solid" [ngClass]="mobileMenuOpen ? 'fa-xmark' : 'fa-bars'"></i>
+            </button>
         </div>
     </nav>
 
@@ -23,33 +27,53 @@
             <div class="blob blob-1"></div>
             <div class="blob blob-2"></div>
             <div class="blob blob-3"></div>
+            <div class="grid-overlay"></div>
         </div>
-        
+
         <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fa-solid fa-sparkles"></i>
+                Now Available on All Devices
+            </div>
             <h1 class="hero-title">
-                The Future of <span class="gradient-text">Professional Networking</span> is Here.
+                Your Professional <span class="gradient-text">Network</span>,<br>
+                Reimagined.
             </h1>
             <p class="hero-subtitle">
-                Connect, collaborate, and grow your career or business on the most dynamic ecosystem designed for creators and professionals.
+                Connect with professionals, grow your brand, and unlock opportunities.
+                Built for creators, businesses, and ambitious individuals.
             </p>
             <div class="hero-actions">
                 <button class="btn-hero-primary" (click)="getStarted()">
                     Get Started Free <i class="fa-solid fa-arrow-right"></i>
                 </button>
-                <button class="btn-hero-secondary">
-                    Explore Trends <i class="fa-solid fa-fire"></i>
+                <button class="btn-hero-secondary" (click)="scrollToDownload()">
+                    <i class="fa-solid fa-download"></i> Install App
                 </button>
             </div>
-            
+
+            <!-- Floating trust badges -->
+            <div class="trust-row">
+                <div class="trust-item">
+                    <i class="fa-solid fa-shield-halved"></i> Secure & Private
+                </div>
+                <div class="trust-item">
+                    <i class="fa-solid fa-bolt"></i> Lightning Fast
+                </div>
+                <div class="trust-item">
+                    <i class="fa-solid fa-globe"></i> Works Everywhere
+                </div>
+            </div>
+
             <!-- Hero Interface Teaser -->
             <div class="hero-preview glass-card">
                 <div class="preview-header">
                     <div class="dots"><span></span><span></span><span></span></div>
-                    <div class="search-bar">Search professionals...</div>
+                    <div class="search-bar"><i class="fa-solid fa-magnifying-glass"></i> Search professionals...</div>
                 </div>
                 <div class="preview-body">
                     <div class="mock-sidebar">
-                        <div class="sidebar-user">
+                        <div class="sidebar-user active">
                             <div class="mock-avatar-sm"></div>
                             <div class="sidebar-text">My Network</div>
                         </div>
@@ -61,30 +85,37 @@
                             <i class="fa-solid fa-bookmark"></i>
                             <div class="sidebar-text">Saved</div>
                         </div>
+                        <div class="sidebar-user">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <div class="sidebar-text">Analytics</div>
+                        </div>
                     </div>
                     <div class="mock-feed">
-                        <!-- Mock Post 1 -->
                         <div class="mock-post">
                             <div class="post-top">
                                 <div class="mock-avatar-md"></div>
                                 <div class="post-meta-wrap">
                                     <div class="post-user-name">Sarah Jenkins</div>
-                                    <div class="post-user-handle">@sarah_creative</div>
+                                    <div class="post-user-handle">&#64;sarah_creative</div>
                                 </div>
                             </div>
-                            <div class="post-desc">Just launched our new brand identity for @NextGen. Thoughts? 🚀</div>
+                            <div class="post-desc">Just launched our new brand identity for &#64;NextGen. Thoughts? 🚀</div>
                             <div class="post-img-placeholder"></div>
+                            <div class="post-actions-mock">
+                                <span><i class="fa-regular fa-heart"></i> 128</span>
+                                <span><i class="fa-regular fa-comment"></i> 34</span>
+                                <span><i class="fa-solid fa-share"></i> 12</span>
+                            </div>
                         </div>
-                        <!-- Mock Post 2 -->
                         <div class="mock-post">
                             <div class="post-top">
                                 <div class="mock-avatar-md cyan"></div>
                                 <div class="post-meta-wrap">
                                     <div class="post-user-name">Alex Rivera</div>
-                                    <div class="post-user-handle">@arivera_pro</div>
+                                    <div class="post-user-handle">&#64;arivera_pro</div>
                                 </div>
                             </div>
-                            <div class="post-desc">Looking for a Senior UX Designer to join our team in London. DM me!</div>
+                            <div class="post-desc">Looking for a Senior UX Designer to join our team. DM me!</div>
                         </div>
                     </div>
                 </div>
@@ -100,22 +131,90 @@
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-            <span class="stat-num">120+</span>
-            <span class="stat-label">Success Stories</span>
+            <span class="stat-num">3M+</span>
+            <span class="stat-label">Connections Made</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-            <span class="stat-num">98%</span>
-            <span class="stat-label">Growth Rate</span>
+            <span class="stat-num">120+</span>
+            <span class="stat-label">Countries</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-num">4.9</span>
+            <span class="stat-label">User Rating</span>
+        </div>
+    </section>
+
+    <!-- Download / Install Section -->
+    <section id="download" class="download-section">
+        <div class="section-header">
+            <span class="badge">Install Now</span>
+            <h2>Get RevConnect on <span class="gradient-text">Any Device</span></h2>
+            <p>Install our app for the best experience. It's fast, lightweight, and works offline.</p>
+        </div>
+
+        <div class="download-grid">
+            <!-- Windows -->
+            <div class="download-card glass-card">
+                <div class="download-icon windows">
+                    <i class="fa-brands fa-windows"></i>
+                </div>
+                <h3>Windows</h3>
+                <p>Install via Chrome or Edge browser for a native desktop experience.</p>
+                <div class="download-steps">
+                    <div class="step"><span>1</span> Open in Chrome/Edge</div>
+                    <div class="step"><span>2</span> Click <i class="fa-solid fa-circle-plus"></i> in address bar</div>
+                    <div class="step"><span>3</span> Click "Install"</div>
+                </div>
+                <button class="btn-download" (click)="installPWA()">
+                    <i class="fa-brands fa-windows"></i> Install Now
+                </button>
+            </div>
+
+            <!-- Android -->
+            <div class="download-card glass-card featured">
+                <div class="featured-tag">Most Popular</div>
+                <div class="download-icon android">
+                    <i class="fa-brands fa-android"></i>
+                </div>
+                <h3>Android</h3>
+                <p>Add to your home screen for an app-like experience with notifications.</p>
+                <div class="download-steps">
+                    <div class="step"><span>1</span> Open in Chrome</div>
+                    <div class="step"><span>2</span> Tap menu <i class="fa-solid fa-ellipsis-vertical"></i></div>
+                    <div class="step"><span>3</span> Tap "Add to Home screen"</div>
+                </div>
+                <button class="btn-download primary" (click)="installPWA()">
+                    <i class="fa-brands fa-android"></i> Install on Android
+                </button>
+            </div>
+
+            <!-- iOS -->
+            <div class="download-card glass-card">
+                <div class="download-icon ios">
+                    <i class="fa-brands fa-apple"></i>
+                </div>
+                <h3>iPhone / iPad</h3>
+                <p>Install from Safari for the full app experience on your iOS device.</p>
+                <div class="download-steps">
+                    <div class="step"><span>1</span> Open in Safari</div>
+                    <div class="step"><span>2</span> Tap Share <i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+                    <div class="step"><span>3</span> Tap "Add to Home Screen"</div>
+                </div>
+                <button class="btn-download" (click)="installPWA()">
+                    <i class="fa-brands fa-apple"></i> Install Now
+                </button>
+            </div>
         </div>
     </section>
 
     <!-- Features Section -->
     <section id="features" class="features">
         <div class="section-header">
-            <span class="badge">Innovation</span>
-            <h2>Tailored for your <span class="gradient-text">Ambition</span></h2>
-            <p>Everything you need to showcase your talent or scale your business.</p>
+            <span class="badge">Features</span>
+            <h2>Everything You Need to <span class="gradient-text">Succeed</span></h2>
+            <p>Powerful tools designed for professionals, creators, and businesses.</p>
         </div>
 
         <div class="features-grid">
@@ -124,28 +223,131 @@
                     <i class="fa-solid fa-id-card"></i>
                 </div>
                 <h3>Dynamic Profiles</h3>
-                <p>Personalized showcases for individuals, creators, and businesses with rich media support.</p>
+                <p>Rich media profiles for individuals, creators, and businesses. Showcase your work beautifully.</p>
             </div>
             <div class="feature-card glass-card">
                 <div class="feature-icon i-cyan">
                     <i class="fa-solid fa-chart-line"></i>
                 </div>
                 <h3>Creator Analytics</h3>
-                <p>Deep insights into your reach and engagement. Understand exactly how your audience interacts.</p>
+                <p>Track views, engagement, and audience growth with real-time analytics dashboards.</p>
             </div>
             <div class="feature-card glass-card">
                 <div class="feature-icon i-pink">
-                    <i class="fa-solid fa-bullhorn"></i>
+                    <i class="fa-solid fa-wallet"></i>
                 </div>
-                <h3>Business Reach</h3>
-                <p>Promote your services with built-in Call To Action tools and targeted professional exposure.</p>
+                <h3>Built-in Payments</h3>
+                <p>Send and receive payments directly in chat. Integrated UPI and wallet support.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="feature-icon i-green">
+                    <i class="fa-solid fa-message"></i>
+                </div>
+                <h3>Real-time Messaging</h3>
+                <p>Instant messaging with media sharing, voice calls, and video calls built right in.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="feature-icon i-orange">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <h3>Stories & Posts</h3>
+                <p>Share updates, photos, and stories with your network. Add music, schedule posts.</p>
             </div>
             <div class="feature-card glass-card">
                 <div class="feature-icon i-yellow">
-                    <i class="fa-solid fa-message"></i>
+                    <i class="fa-solid fa-bell"></i>
                 </div>
-                <h3>Real-time Collab</h3>
-                <p>Seamless messaging and networking tools to turn connections into active partnerships.</p>
+                <h3>Smart Notifications</h3>
+                <p>Stay updated with real-time push notifications for messages, likes, and connections.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="section-header">
+            <span class="badge">Simple</span>
+            <h2>Get Started in <span class="gradient-text">3 Steps</span></h2>
+            <p>Join the network in under a minute.</p>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">01</div>
+                <div class="step-icon"><i class="fa-solid fa-user-plus"></i></div>
+                <h3>Create Account</h3>
+                <p>Sign up with your email. Choose Personal, Creator, or Business profile type.</p>
+            </div>
+            <div class="step-connector"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="step-card">
+                <div class="step-number">02</div>
+                <div class="step-icon"><i class="fa-solid fa-palette"></i></div>
+                <h3>Build Your Profile</h3>
+                <p>Add your bio, portfolio, skills, and connect with people in your industry.</p>
+            </div>
+            <div class="step-connector"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="step-card">
+                <div class="step-number">03</div>
+                <div class="step-icon"><i class="fa-solid fa-rocket"></i></div>
+                <h3>Grow & Earn</h3>
+                <p>Post content, build your audience, and monetize your skills through the platform.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="section-header">
+            <span class="badge">Testimonials</span>
+            <h2>Loved by <span class="gradient-text">Professionals</span></h2>
+            <p>See what our community has to say.</p>
+        </div>
+
+        <div class="testimonials-grid">
+            <div class="testimonial-card glass-card">
+                <div class="testimonial-stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <p class="testimonial-text">"RevConnect completely changed how I network. The analytics helped me understand my audience and grow my freelance business 3x."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar t-purple">RK</div>
+                    <div>
+                        <strong>Rahul Kumar</strong>
+                        <span>Freelance Designer</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card glass-card">
+                <div class="testimonial-stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <p class="testimonial-text">"The built-in payments feature is a game-changer. I can invoice clients directly through our conversation. So seamless!"</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar t-cyan">PS</div>
+                    <div>
+                        <strong>Priya Sharma</strong>
+                        <span>Content Creator</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card glass-card">
+                <div class="testimonial-stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star-half-stroke"></i>
+                </div>
+                <p class="testimonial-text">"Best professional networking app I've used. Clean UI, fast performance, and it works great as a PWA on my phone."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar t-pink">AM</div>
+                    <div>
+                        <strong>Arjun Mehta</strong>
+                        <span>Startup Founder</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -153,19 +355,56 @@
     <!-- CTA Section -->
     <section class="final-cta">
         <div class="cta-card glass-card">
-            <h2>Ready to redefine your <span class="gradient-text">Network?</span></h2>
-            <p>Join thousands of professionals already thriving on RevConnect.</p>
-            <button class="btn-primary-glow xl" [routerLink]="['/register']">Create Your Profile Today</button>
+            <div class="cta-glow"></div>
+            <h2>Ready to Build Your <span class="gradient-text">Network?</span></h2>
+            <p>Join thousands of professionals already thriving on RevConnect. Free forever.</p>
+            <div class="cta-actions">
+                <button class="btn-primary-glow xl" [routerLink]="['/register']">
+                    Create Your Profile <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <button class="btn-hero-secondary" (click)="scrollToDownload()">
+                    <i class="fa-solid fa-download"></i> Install App
+                </button>
+            </div>
         </div>
     </section>
 
     <footer class="landing-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="brand">
+                    <div class="logo-morph">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <span class="brand-text">RevConnect</span>
+                </div>
+                <p class="footer-desc">The professional networking platform for creators, businesses, and ambitious individuals.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Product</h4>
+                <a (click)="scrollToSection('features')">Features</a>
+                <a (click)="scrollToSection('download')">Download</a>
+                <a (click)="scrollToSection('how-it-works')">How It Works</a>
+            </div>
+            <div class="footer-col">
+                <h4>Get Started</h4>
+                <a [routerLink]="['/register']">Create Account</a>
+                <a [routerLink]="['/login']">Sign In</a>
+                <a (click)="installPWA()">Install App</a>
+            </div>
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <a href="mailto:support@revconnect.app">Contact Support</a>
+                <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
         <div class="footer-bottom">
             <p>&copy; 2026 RevConnect. All rights reserved.</p>
-            <div class="footer-links">
-                <a href="#">Privacy</a>
-                <a href="#">Terms</a>
-                <a href="#">Help</a>
+            <div class="footer-social">
+                <a href="https://twitter.com" target="_blank" rel="noopener"><i class="fa-brands fa-twitter"></i></a>
+                <a href="https://instagram.com" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://linkedin.com" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin"></i></a>
+                <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
             </div>
         </div>
     </footer>

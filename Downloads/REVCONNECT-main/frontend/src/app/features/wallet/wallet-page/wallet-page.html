@@ -1,0 +1,354 @@
+<div class="app-layout">
+    <app-navbar></app-navbar>
+
+    <div class="main-container">
+        <aside class="sidebar-column">
+            <app-sidebar></app-sidebar>
+        </aside>
+
+        <main class="feed-column wallet-main">
+
+        <!-- Success Animation Overlay -->
+        <div class="success-overlay" *ngIf="showSuccessAnim">
+            <div class="success-anim">
+                <div class="success-check">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h2>Payment Successful!</h2>
+                <p class="success-amount" *ngIf="successTxn">{{formatAmount(successTxn.amount)}}</p>
+                <p class="success-to" *ngIf="successTxn">Sent to {{successTxn.receiverName}}</p>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="alert alert-success" *ngIf="successMessage">
+            <i class="fa-solid fa-check-circle"></i> {{successMessage}}
+        </div>
+        <div class="alert alert-error" *ngIf="errorMessage">
+            <i class="fa-solid fa-exclamation-circle"></i> {{errorMessage}}
+            <button class="alert-close" (click)="errorMessage = ''"><i class="fa-solid fa-times"></i></button>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <div class="balance-info">
+                <span class="balance-label">Wallet Balance</span>
+                <h1 class="balance-amount">{{wallet ? formatAmount(wallet.balance) : '₹0.00'}}</h1>
+                <span class="balance-currency">Indian Rupee (INR)</span>
+            </div>
+            <div class="balance-actions">
+                <button class="action-btn primary" (click)="switchTab('send')">
+                    <i class="fa-solid fa-paper-plane"></i> Send
+                </button>
+                <button class="action-btn secondary" (click)="switchTab('request')">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Request
+                </button>
+                <button class="action-btn accent" (click)="switchTab('addmoney')">
+                    <i class="fa-solid fa-plus"></i> Add Money
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button [class.active]="activeTab === 'dashboard'" (click)="switchTab('dashboard')">
+                <i class="fa-solid fa-home"></i> Dashboard
+            </button>
+            <button [class.active]="activeTab === 'send'" (click)="switchTab('send')">
+                <i class="fa-solid fa-paper-plane"></i> Send
+            </button>
+            <button [class.active]="activeTab === 'request'" (click)="switchTab('request')">
+                <i class="fa-solid fa-hand-holding-dollar"></i> Request
+            </button>
+            <button [class.active]="activeTab === 'history'" (click)="switchTab('history')">
+                <i class="fa-solid fa-clock-rotate-left"></i> History
+            </button>
+            <button [class.active]="activeTab === 'bank'" (click)="switchTab('bank')">
+                <i class="fa-solid fa-building-columns"></i> Bank
+            </button>
+            <button [class.active]="activeTab === 'upi'" (click)="switchTab('upi')">
+                <i class="fa-solid fa-qrcode"></i> UPI
+            </button>
+        </div>
+
+        <!-- ─── Dashboard Tab ─── -->
+        <div class="tab-content" *ngIf="activeTab === 'dashboard'">
+
+            <!-- Pending Requests -->
+            <div class="section" *ngIf="pendingRequests.length > 0">
+                <h3 class="section-title"><i class="fa-solid fa-bell"></i> Pending Payment Requests</h3>
+                <div class="request-list">
+                    <div class="request-card" *ngFor="let req of pendingRequests">
+                        <div class="request-user">
+                            <img [src]="req.requesterPic || 'https://ui-avatars.com/api/?name=' + req.requesterName + '&background=random&size=40'" alt="">
+                            <div>
+                                <strong>{{req.requesterName}}</strong>
+                                <span class="req-note" *ngIf="req.note">{{req.note}}</span>
+                            </div>
+                        </div>
+                        <div class="request-amount">{{formatAmount(req.amount)}}</div>
+                        <div class="request-actions">
+                            <button class="btn-accept" (click)="acceptRequest(req.id)">
+                                <i class="fa-solid fa-check"></i> Pay
+                            </button>
+                            <button class="btn-reject" (click)="rejectRequest(req.id)">
+                                <i class="fa-solid fa-times"></i> Decline
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="section">
+                <h3 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent Transactions</h3>
+                <div class="txn-list" *ngIf="transactions.length > 0">
+                    <div class="txn-item" *ngFor="let txn of transactions.slice(0, 10)">
+                        <div class="txn-icon" [class.sent]="isSent(txn)" [class.received]="!isSent(txn)">
+                            <i class="fa-solid" [ngClass]="isSent(txn) ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                        </div>
+                        <div class="txn-details">
+                            <strong>{{isSent(txn) ? txn.receiverName : txn.senderName}}</strong>
+                            <span class="txn-note" *ngIf="txn.note">{{txn.note}}</span>
+                            <span class="txn-time">{{getTimeAgo(txn.createdAt)}}</span>
+                        </div>
+                        <div class="txn-amount" [class.sent]="isSent(txn)" [class.received]="!isSent(txn)">
+                            {{isSent(txn) ? '-' : '+'}}{{formatAmount(txn.amount)}}
+                        </div>
+                        <span class="txn-status" [ngClass]="txn.status.toLowerCase()">{{txn.status}}</span>
+                    </div>
+                </div>
+                <div class="empty-state" *ngIf="transactions.length === 0">
+                    <i class="fa-solid fa-receipt"></i>
+                    <p>No transactions yet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Send Money Tab ─── -->
+        <div class="tab-content" *ngIf="activeTab === 'send'">
+            <div class="form-card">
+                <h3><i class="fa-solid fa-paper-plane"></i> Send Money</h3>
+                <div class="form-group">
+                    <label>Recipient</label>
+                    <input type="text" [(ngModel)]="sendRecipient" (input)="searchUsers(sendRecipient)"
+                           placeholder="Search by name or username" class="form-input">
+                    <div class="search-dropdown" *ngIf="searchResults.length > 0">
+                        <div class="search-item" *ngFor="let u of searchResults" (click)="selectRecipient(u)">
+                            <img [src]="u.profilePicture || 'https://ui-avatars.com/api/?name=' + u.name + '&background=random&size=32'" alt="">
+                            <div>
+                                <strong>{{u.name}}</strong>
+                                <span>&#64;{{u.username}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="selected-user" *ngIf="selectedRecipient">
+                        <img [src]="selectedRecipient.profilePicture || 'https://ui-avatars.com/api/?name=' + selectedRecipient.name + '&background=random&size=32'" alt="">
+                        <span>{{selectedRecipient.name}} (&#64;{{selectedRecipient.username}})</span>
+                        <button (click)="selectedRecipient = null; sendRecipient = ''"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <div class="amount-input-wrap">
+                        <span class="currency-symbol">₹</span>
+                        <input type="number" [(ngModel)]="sendAmount" placeholder="0.00" min="1" class="form-input amount-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Note (optional)</label>
+                    <input type="text" [(ngModel)]="sendNote" placeholder="What's this for?" class="form-input">
+                </div>
+                <button class="submit-btn" [disabled]="!selectedRecipient || !sendAmount || sendAmount < 1 || sendLoading"
+                        (click)="sendMoney()">
+                    <i class="fa-solid fa-paper-plane" *ngIf="!sendLoading"></i>
+                    <i class="fa-solid fa-spinner fa-spin" *ngIf="sendLoading"></i>
+                    {{sendLoading ? 'Sending...' : 'Send Money'}}
+                </button>
+            </div>
+        </div>
+
+        <!-- ─── Request Money Tab ─── -->
+        <div class="tab-content" *ngIf="activeTab === 'request'">
+            <div class="form-card">
+                <h3><i class="fa-solid fa-hand-holding-dollar"></i> Request Money</h3>
+                <div class="form-group">
+                    <label>Request From</label>
+                    <input type="text" [(ngModel)]="requestRecipient" (input)="searchPayers(requestRecipient)"
+                           placeholder="Search by name or username" class="form-input">
+                    <div class="search-dropdown" *ngIf="requestSearchResults.length > 0">
+                        <div class="search-item" *ngFor="let u of requestSearchResults" (click)="selectPayer(u)">
+                            <img [src]="u.profilePicture || 'https://ui-avatars.com/api/?name=' + u.name + '&background=random&size=32'" alt="">
+                            <div>
+                                <strong>{{u.name}}</strong>
+                                <span>&#64;{{u.username}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="selected-user" *ngIf="selectedPayer">
+                        <img [src]="selectedPayer.profilePicture || 'https://ui-avatars.com/api/?name=' + selectedPayer.name + '&background=random&size=32'" alt="">
+                        <span>{{selectedPayer.name}} (&#64;{{selectedPayer.username}})</span>
+                        <button (click)="selectedPayer = null; requestRecipient = ''"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <div class="amount-input-wrap">
+                        <span class="currency-symbol">₹</span>
+                        <input type="number" [(ngModel)]="requestAmount" placeholder="0.00" min="1" class="form-input amount-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Note (optional)</label>
+                    <input type="text" [(ngModel)]="requestNote" placeholder="What's this for?" class="form-input">
+                </div>
+                <button class="submit-btn request-btn" [disabled]="!selectedPayer || !requestAmount || requestAmount < 1 || requestLoading"
+                        (click)="requestMoney()">
+                    <i class="fa-solid fa-hand-holding-dollar" *ngIf="!requestLoading"></i>
+                    <i class="fa-solid fa-spinner fa-spin" *ngIf="requestLoading"></i>
+                    {{requestLoading ? 'Sending...' : 'Request Money'}}
+                </button>
+            </div>
+        </div>
+
+        <!-- ─── Add Money Tab ─── -->
+        <div class="tab-content" *ngIf="activeTab === 'addmoney'">
+            <div class="form-card">
+                <h3><i class="fa-solid fa-plus-circle"></i> Add Money to Wallet</h3>
+                <div class="quick-amounts">
+                    <button *ngFor="let amt of [100, 500, 1000, 2000, 5000]"
+                            (click)="addMoneyAmount = amt" [class.active]="addMoneyAmount === amt">
+                        ₹{{amt}}
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label>Custom Amount (₹)</label>
+                    <div class="amount-input-wrap">
+                        <span class="currency-symbol">₹</span>
+                        <input type="number" [(ngModel)]="addMoneyAmount" placeholder="0.00" min="1" class="form-input amount-input">
+                    </div>
+                </div>
+                <button class="submit-btn add-btn" [disabled]="!addMoneyAmount || addMoneyAmount < 1 || loading"
+                        (click)="addMoney()">
+                    <i class="fa-solid fa-plus" *ngIf="!loading"></i>
+                    <i class="fa-solid fa-spinner fa-spin" *ngIf="loading"></i>
+                    {{loading ? 'Processing...' : 'Add ₹' + (addMoneyAmount || 0)}}
+                </button>
+                <p class="gateway-note" *ngIf="!razorpayConfigured">
+                    <i class="fa-solid fa-info-circle"></i> Payment gateway not configured yet. Contact admin to set up Razorpay.
+                </p>
+            </div>
+        </div>
+
+        <!-- ─── Transaction History Tab ─── -->
+        <div class="tab-content" *ngIf="activeTab === 'history'">
+            <div class="history-filters">
+                <button *ngFor="let f of ['all', 'sent', 'received', 'pending', 'failed']"
+                        [class.active]="txnFilter === f" (click)="filterTransactions(f)">
+                    {{f | titlecase}}
+                </button>
+            </div>
+            <div class="txn-list" *ngIf="transactions.length > 0">
+                <div class="txn-item" *ngFor="let txn of transactions">
+                    <div class="txn-icon" [class.sent]="isSent(txn)" [class.received]="!isSent(txn)">
+                        <i class="fa-solid" [ngClass]="isSent(txn) ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                    </div>
+                    <div class="txn-details">
+                        <strong>{{isSent(txn) ? txn.receiverName : txn.senderName}}</strong>
+                        <span class="txn-ref">{{txn.transactionRef}}</span>
+                        <span class="txn-note" *ngIf="txn.note">{{txn.note}}</span>
+                        <span class="txn-time">{{getTimeAgo(txn.createdAt)}}</span>
+                    </div>
+                    <div class="txn-amount" [class.sent]="isSent(txn)" [class.received]="!isSent(txn)">
+                        {{isSent(txn) ? '-' : '+'}}{{formatAmount(txn.amount)}}
+                    </div>
+                    <span class="txn-status" [ngClass]="txn.status.toLowerCase()">{{txn.status}}</span>
+                </div>
+            </div>
+            <div class="empty-state" *ngIf="transactions.length === 0">
+                <i class="fa-solid fa-receipt"></i>
+                <p>No transactions found</p>
+            </div>
+            <div class="pagination" *ngIf="txnTotalPages > 1">
+                <button [disabled]="txnPage === 0" (click)="prevPage()"><i class="fa-solid fa-chevron-left"></i></button>
+                <span>Page {{txnPage + 1}} of {{txnTotalPages}}</span>
+                <button [disabled]="txnPage >= txnTotalPages - 1" (click)="nextPage()"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <!-- ─── Bank Tab ─── -->
+        <div class="tab-content" *ngIf="activeTab === 'bank'">
+            <div class="form-card">
+                <h3><i class="fa-solid fa-building-columns"></i> Link Bank Account</h3>
+                <div class="form-group">
+                    <label>Account Holder Name</label>
+                    <input type="text" [(ngModel)]="newBank.accountHolderName" placeholder="Full name" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" [(ngModel)]="newBank.accountNumber" placeholder="Account number" class="form-input">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>IFSC Code</label>
+                        <input type="text" [(ngModel)]="newBank.ifscCode" placeholder="e.g. SBIN0001234" class="form-input" style="text-transform:uppercase">
+                    </div>
+                    <div class="form-group">
+                        <label>Bank Name</label>
+                        <input type="text" [(ngModel)]="newBank.bankName" placeholder="e.g. State Bank of India" class="form-input">
+                    </div>
+                </div>
+                <button class="submit-btn" (click)="addBankAccount()">
+                    <i class="fa-solid fa-plus"></i> Link Bank Account
+                </button>
+            </div>
+            <div class="section" *ngIf="bankAccounts.length > 0">
+                <h3 class="section-title">Linked Accounts</h3>
+                <div class="linked-list">
+                    <div class="linked-item" *ngFor="let ba of bankAccounts">
+                        <div class="linked-icon"><i class="fa-solid fa-building-columns"></i></div>
+                        <div class="linked-details">
+                            <strong>{{ba.bankName}}</strong>
+                            <span>{{ba.accountNumber}} &bull; {{ba.ifscCode}}</span>
+                            <span>{{ba.accountHolderName}}</span>
+                        </div>
+                        <button class="remove-btn" (click)="removeBankAccount(ba.id)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── UPI Tab ─── -->
+        <div class="tab-content" *ngIf="activeTab === 'upi'">
+            <div class="form-card">
+                <h3><i class="fa-solid fa-qrcode"></i> Link UPI ID</h3>
+                <div class="form-group">
+                    <label>UPI ID</label>
+                    <input type="text" [(ngModel)]="newUpi.upiId" placeholder="e.g. username@upi" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Provider (optional)</label>
+                    <input type="text" [(ngModel)]="newUpi.provider" placeholder="e.g. Google Pay, PhonePe" class="form-input">
+                </div>
+                <button class="submit-btn" (click)="addUpiLink()">
+                    <i class="fa-solid fa-plus"></i> Link UPI ID
+                </button>
+            </div>
+            <div class="section" *ngIf="upiLinks.length > 0">
+                <h3 class="section-title">Linked UPI IDs</h3>
+                <div class="linked-list">
+                    <div class="linked-item" *ngFor="let upi of upiLinks">
+                        <div class="linked-icon"><i class="fa-solid fa-qrcode"></i></div>
+                        <div class="linked-details">
+                            <strong>{{upi.upiId}}</strong>
+                            <span *ngIf="upi.provider">{{upi.provider}}</span>
+                        </div>
+                        <button class="remove-btn" (click)="removeUpiLink(upi.id)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </main>
+    </div>
+</div>

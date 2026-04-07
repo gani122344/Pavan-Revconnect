@@ -220,7 +220,9 @@
                 </div>
 
                 @for (post of posts; track post.id) {
-                <div class="post-card glass-card" [class.pinned-post]="post.pinned && isPostAuthor(post)" [class.options-open]="postOptionsOpenMap[post.id]">
+                <div class="post-card glass-card" #postEl [class.pinned-post]="post.pinned && isPostAuthor(post)" [class.options-open]="postOptionsOpenMap[post.id]"
+                    [attr.data-post-id]="post.id">
+                    <span style="display:none" [attr.data-init]="observePost(postEl, post.id)"></span>
 
                     <div class="pinned-indicator" *ngIf="post.pinned && isPostAuthor(post)">
                         <i class="fa-solid fa-thumbtack"></i> Pinned to your profile
@@ -233,6 +235,10 @@
                             <div class="meta">
                                 <h4>{{post.authorName}}</h4>
                                 <span>&#64;{{post.authorUsername}} • {{getRelativeTime(post.createdAt)}}</span>
+                                <div class="post-song-label" *ngIf="post.songTitle" (click)="togglePostAudio(post)">
+                                    <i class="fa-solid fa-music"></i>
+                                    <span>{{post.songTitle}}</span>
+                                </div>
                                 <div class="partnership-badge" *ngIf="post.isPromotional">
                                     <i class="fa-solid fa-handshake"></i> Paid Partnership
                                     <span *ngIf="post.partnerName"
@@ -276,6 +282,51 @@
                         <!-- Edit Mode -->
                         <div *ngIf="editingPostId === post.id" class="edit-mode">
                             <textarea [(ngModel)]="editPostContent" class="form-control mb-2"></textarea>
+                            <!-- Song edit controls -->
+                            <div class="edit-song-section" *ngIf="editSong && !editSongRemoved">
+                                <div class="selected-song-chip">
+                                    <div class="song-chip-info">
+                                        <i class="fa-solid fa-music"></i>
+                                        <span class="song-chip-title">{{ editSong.title }}</span>
+                                        <span class="song-chip-artist">- {{ editSong.artist }}</span>
+                                    </div>
+                                    <button class="song-chip-remove" (click)="showEditMusicPicker = true" title="Change song">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button class="song-chip-remove" (click)="removeEditSong()" title="Remove song">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div *ngIf="!editSong || editSongRemoved" class="edit-song-section">
+                                <button class="icon-btn music-icon-btn" (click)="showEditMusicPicker = !showEditMusicPicker">
+                                    <i class="fa-solid fa-music"></i> Add Song
+                                </button>
+                            </div>
+                            <!-- Song picker for edit -->
+                            <div class="song-library-panel" *ngIf="showEditMusicPicker">
+                                <div class="song-library-header">
+                                    <div class="song-search-box">
+                                        <i class="fa-solid fa-search"></i>
+                                        <input type="text" [(ngModel)]="songSearch" placeholder="Search songs...">
+                                    </div>
+                                    <div class="genre-filter-row">
+                                        <button class="genre-chip" [class.active]="!selectedGenre" (click)="selectedGenre = ''">All</button>
+                                        <button *ngFor="let genre of allGenres" class="genre-chip" [class.active]="selectedGenre === genre"
+                                            (click)="selectedGenre = genre">{{ genre }}</button>
+                                    </div>
+                                </div>
+                                <div class="song-library-list">
+                                    <div *ngFor="let song of filteredSongs" class="song-list-item" (click)="selectEditSong(song)">
+                                        <img [src]="song.coverUrl" alt="cover" class="song-cover">
+                                        <div class="song-meta">
+                                            <span class="song-name">{{ song.title }}</span>
+                                            <span class="song-artist">{{ song.artist }}</span>
+                                        </div>
+                                        <span class="song-genre-tag">{{ song.genre }}</span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="edit-actions">
                                 <button class="btn-secondary btn-sm" (click)="cancelEdit()">Cancel</button>
                                 <button class="btn-primary btn-sm" (click)="savePostEdit(post.id)">Save</button>
@@ -308,24 +359,15 @@
                             (post.mediaUrls[0].includes('.mp4') || post.mediaUrls[0].includes('.webm')))) {
                             <video [src]="post.mediaUrls[0]" controls class="post-video"></video>
                             } @else if (post.mediaUrls && post.mediaUrls.length > 0 && post.postType !== 'REPOST') {
-                            <a [routerLink]="['/post', post.id]">
-                                <img [src]="post.mediaUrls[0]" alt="Post attachment" class="post-image">
-                            </a>
-                            }
-
-                            <!-- Song Player Badge -->
-                            <div class="post-song-badge" *ngIf="post.songTitle" (click)="togglePostAudio(post)">
-                                <button class="song-play-btn" [class.playing]="isPostPlaying(post)">
-                                    <i class="fa-solid" [ngClass]="isPostPlaying(post) ? 'fa-pause' : 'fa-play'"></i>
+                            <div class="post-media-wrap">
+                                <a [routerLink]="['/post', post.id]">
+                                    <img [src]="post.mediaUrls[0]" alt="Post attachment" class="post-image">
+                                </a>
+                                <button class="post-audio-toggle" *ngIf="post.songTitle" (click)="togglePostAudio(post); $event.stopPropagation(); $event.preventDefault()">
+                                    <i class="fa-solid" [ngClass]="isPostPlaying(post) ? 'fa-volume-high' : 'fa-volume-xmark'"></i>
                                 </button>
-                                <div class="song-details">
-                                    <div class="song-title">{{post.songTitle}}</div>
-                                    <div class="song-artist">{{post.songArtist}}</div>
-                                </div>
-                                <div class="equalizer-bars" [class.playing]="isPostPlaying(post)">
-                                    <span></span><span></span><span></span><span></span>
-                                </div>
                             </div>
+                            }
 
                             <!-- Business Call To Action -->
                             <div class="post-cta" *ngIf="post.ctaLabel && post.ctaUrl">

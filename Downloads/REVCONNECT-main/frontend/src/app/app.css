@@ -1,0 +1,342 @@
+/* ─── Global Call Overlay ─── */
+.global-call-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.global-call-overlay .call-card,
+.global-call-overlay .call-connected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2.5rem 2rem;
+  background: rgba(30, 41, 59, 0.95);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 320px;
+  position: relative;
+}
+
+.global-call-overlay .call-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.global-call-overlay .call-name {
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.global-call-overlay .call-status {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.global-call-overlay .call-duration {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.global-call-overlay .call-actions {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.global-call-overlay .call-action-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: #fff;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.global-call-overlay .call-action-btn:hover {
+  transform: scale(1.1);
+}
+
+.global-call-overlay .call-action-btn.accept {
+  background: #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+}
+
+.global-call-overlay .call-action-btn.reject {
+  background: #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+.global-call-overlay .audio-call-ui {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.global-call-overlay .call-controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.global-call-overlay .control-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.15s, transform 0.15s;
+}
+
+.global-call-overlay .control-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.global-call-overlay .control-btn.active {
+  background: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.global-call-overlay .control-btn.end-call {
+  background: #ef4444;
+  color: #fff;
+}
+
+.global-call-overlay .control-btn.end-call:hover {
+  background: #dc2626;
+}
+
+.global-call-overlay .call-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 197, 94, 0.4);
+  animation: globalPulseRing 1.5s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes globalPulseRing {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+/* ─── Fullscreen Ringing UI ─── */
+.call-ringing-fullscreen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.call-ringing-fullscreen .ringing-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #312e81 70%, #1e293b 100%);
+  z-index: 0;
+}
+
+.call-ringing-fullscreen .ringing-local-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.call-ringing-fullscreen .ringing-overlay-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.5) 0%,
+    rgba(0,0,0,0.15) 30%,
+    rgba(0,0,0,0.15) 60%,
+    rgba(0,0,0,0.6) 100%);
+  z-index: 1;
+}
+
+.call-ringing-fullscreen .ringing-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.call-ringing-fullscreen .ringing-avatar-area {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.call-ringing-fullscreen .ringing-avatar-area .call-avatar {
+  width: 100px;
+  height: 100px;
+}
+
+.call-ringing-fullscreen .ringing-small-avatar {
+  width: 80px;
+  height: 80px;
+  border: 3px solid rgba(255,255,255,0.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.call-ringing-fullscreen .ringing-actions {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 3rem;
+}
+
+.call-ringing-fullscreen .call-action-btn {
+  flex-direction: column;
+  width: 64px;
+  height: 64px;
+}
+
+.call-ringing-fullscreen .call-action-btn span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 6px;
+  color: #fff;
+}
+
+/* ─── Video Call UI ─── */
+.global-call-overlay .video-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+}
+
+.global-call-overlay .remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.global-call-overlay .pip-video {
+  position: absolute;
+  width: 140px;
+  height: 200px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  cursor: pointer;
+  background: #222;
+}
+
+.global-call-overlay .local-mirror {
+  transform: scaleX(-1) !important;
+}
+
+.global-call-overlay .video-info-overlay {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 5;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.global-call-overlay .video-name {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.global-call-overlay .video-duration {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.global-call-overlay .video-connecting {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+}
+
+/* When video call is active, the call-connected should be full screen */
+.global-call-overlay .call-connected:has(.video-container) {
+  padding: 0;
+  background: transparent;
+  border: none;
+  min-width: unset;
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+}
+
+.global-call-overlay .call-connected:has(.video-container) .call-controls {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  padding: 12px 24px;
+  border-radius: 40px;
+}
+
+@media (max-width: 768px) {
+  .global-call-overlay .pip-video {
+    width: 100px;
+    height: 140px;
+    border-radius: 12px;
+  }
+}

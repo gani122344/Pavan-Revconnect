@@ -10,6 +10,7 @@ import { MediaService } from '../../../core/services/media.service';
 import { LinkifyPipe } from '../../../shared/pipes/linkify-pipe';
 import { CallService, CallState } from '../../../core/services/call.service';
 import { Subscription } from 'rxjs';
+import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
 
 /**
  * HOW MESSAGES WORK (connected to backend MessageController):
@@ -46,6 +47,7 @@ export class MessagesPage implements OnInit, OnDestroy {
     isSending = false;
 
     currentUserId: number = 0;
+    currentUserType: string = 'PERSONAL';
 
     // Emoji picker
     showEmojiPicker = false;
@@ -55,6 +57,26 @@ export class MessagesPage implements OnInit, OnDestroy {
     isUploadingPhoto = false;
     photoPreviewUrl: string | null = null;
     pendingMediaUrl: string | null = null;
+
+    // Location sharing
+    isSendingLocation = false;
+
+    // Lightbox
+    lightboxVisible = false;
+    lightboxImageUrl: string = '';
+
+    // Voice recording
+    isRecording = false;
+    recordingTime = 0;
+    private mediaRecorder: MediaRecorder | null = null;
+    private recordedChunks: Blob[] = [];
+    private recordingInterval: any = null;
+    playingVoiceId: number | null = null;
+    private voiceAudio: HTMLAudioElement | null = null;
+    voiceWaveformBars: number[] = Array.from({ length: 28 }, () => Math.random() * 16 + 4);
+
+    // Document upload
+    isUploadingDoc = false;
 
     // Context menu (right-click)
     contextMenuVisible = false;
@@ -74,13 +96,24 @@ export class MessagesPage implements OnInit, OnDestroy {
     private localStreamSub?: Subscription;
     private remoteStreamSub?: Subscription;
 
+    // Video PiP drag & swap
+    videoSwapped = false;
+    pipX = 20;
+    pipY = 20;
+    private pipDragging = false;
+    private pipStartX = 0;
+    private pipStartY = 0;
+    private pipOrigX = 0;
+    private pipOrigY = 0;
+    private pipMoved = false;
+
     constructor(
         private messageService: MessageService,
         private userService: UserService,
         private mediaService: MediaService,
         public callService: CallService,
         private route: ActivatedRoute,
-        private router: Router,
+        public router: Router,
         private cdr: ChangeDetectorRef
     ) { }
 
@@ -95,6 +128,7 @@ export class MessagesPage implements OnInit, OnDestroy {
     private countPollSub: any;
     private convPollSub: any;
     private msgPollSub: any;
+    private timestampRefreshSub: any;
 
     ngOnInit() {
         this.loadCurrentUser();
@@ -107,7 +141,7 @@ export class MessagesPage implements OnInit, OnDestroy {
         // Periodically refresh conversation list to pick up incoming messages & re-sort
         this.convPollSub = setInterval(() => {
             this.refreshConversationOrder();
-        }, 8000);
+        }, 4000);
 
         // Poll for new messages in active chat
         this.msgPollSub = setInterval(() => {
@@ -116,8 +150,12 @@ export class MessagesPage implements OnInit, OnDestroy {
             }
         }, 5000);
 
-        // Start call signal polling
-        this.callService.startPolling();
+        // Periodically trigger change detection so relative timestamps update
+        this.timestampRefreshSub = setInterval(() => {
+            this.cdr.detectChanges();
+        }, 30000);
+
+        // Subscribe to call state (polling is managed globally by App component)
         this.callSub = this.callService.callState$.subscribe(state => {
             this.callState = state;
             this.cdr.detectChanges();
@@ -179,10 +217,11 @@ export class MessagesPage implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        document.body.classList.remove('messages-fullscreen');
         if (this.countPollSub) clearInterval(this.countPollSub);
         if (this.convPollSub) clearInterval(this.convPollSub);
         if (this.msgPollSub) clearInterval(this.msgPollSub);
-        this.callService.stopPolling();
+        if (this.timestampRefreshSub) clearInterval(this.timestampRefreshSub);
         this.callSub?.unsubscribe();
         this.localStreamSub?.unsubscribe();
         this.remoteStreamSub?.unsubscribe();
@@ -214,6 +253,14 @@ export class MessagesPage implements OnInit, OnDestroy {
                         this.messages = freshMessages;
                         this.cdr.detectChanges();
                         this.scrollToBottom();
+                        // Move this conversation to top of list
+                        const idx = this.conversations.findIndex(c => Number(c.userId) === conversationId);
+                        if (idx > 0) {
+                            const [conv] = this.conversations.splice(idx, 1);
+                            (conv as any).lastMessageTime = new Date().toISOString();
+                            this.conversations.unshift(conv);
+                            this.cdr.markForCheck();
+                        }
                     }
                 }
             }
@@ -225,6 +272,7 @@ export class MessagesPage implements OnInit, OnDestroy {
             next: (res) => {
                 if (res.success && res.data) {
                     this.currentUserId = res.data.id;
+                    this.currentUserType = res.data.userType || 'PERSONAL';
                     this.cdr.markForCheck();
                 }
             }
@@ -311,8 +359,15 @@ export class MessagesPage implements OnInit, OnDestroy {
         });
     }
 
+    goBackToList() {
+        this.selectedConversation = null;
+        document.body.classList.remove('messages-fullscreen');
+        this.cdr.detectChanges();
+    }
+
     selectConversation(partner: ConversationPartner) {
         this.selectedConversation = partner;
+        document.body.classList.add('messages-fullscreen');
         this.messages = [];
         this.loadMessages(partner.userId);
         // Ensure the partner is in the conversations list (for sidebar highlighting)
@@ -478,9 +533,14 @@ export class MessagesPage implements OnInit, OnDestroy {
         if (!this.contextMenuMessage) return;
         const msgId = this.contextMenuMessage.id;
         this.contextMenuVisible = false;
+        this.contextMenuMessage = null;
         this.messageService.deleteMessage(msgId).subscribe({
             next: () => {
                 this.messages = this.messages.filter(m => m.id !== msgId);
+                this.cdr.detectChanges();
+            },
+            error: (err: any) => {
+                console.error('Delete message failed:', err);
                 this.cdr.detectChanges();
             }
         });
@@ -505,22 +565,8 @@ export class MessagesPage implements OnInit, OnDestroy {
             `https://ui-avatars.com/api/?name=${encodeURIComponent(partner.name || partner.username)}&background=random`;
     }
 
-    getRelativeTime(dateString: string): string {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '';
-        const now = new Date();
-        const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
-        if (seconds < 60) return 'just now';
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return minutes + 'm ago';
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return hours + 'h ago';
-        const days = Math.floor(hours / 24);
-        if (days < 7) return days + 'd ago';
-        if (days < 30) return Math.floor(days / 7) + 'w ago';
-        if (days < 365) return Math.floor(days / 30) + 'mo ago';
-        return Math.floor(days / 365) + 'y ago';
+    getRelativeTime(value: any): string {
+        return sharedGetRelativeTime(value);
     }
 
     formatMessage(content: string): string {
@@ -529,6 +575,33 @@ export class MessagesPage implements OnInit, OnDestroy {
         return content.replace(urlRegex, (url) => {
             return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="msg-link">${url}</a>`;
         });
+    }
+
+    isCallEvent(msg: MessageItem): boolean {
+        return !!msg.content && msg.content.startsWith('[[CALL|') && msg.content.endsWith(']]');
+    }
+
+    getCallEventData(msg: MessageItem): { type: string; status: string; duration: number } {
+        try {
+            const inner = msg.content.substring(2, msg.content.length - 2);
+            const parts = inner.split('|');
+            return {
+                type: parts[1] || 'audio',
+                status: parts[2] || 'ended',
+                duration: parseInt(parts[3], 10) || 0
+            };
+        } catch {
+            return { type: 'audio', status: 'ended', duration: 0 };
+        }
+    }
+
+    formatCallDuration(seconds: number): string {
+        if (seconds < 60) return seconds + 's';
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        if (m < 60) return m + 'm ' + (s > 0 ? s + 's' : '');
+        const h = Math.floor(m / 60);
+        return h + 'h ' + (m % 60) + 'm';
     }
 
     isSharedPost(msg: MessageItem): boolean {
@@ -557,7 +630,7 @@ export class MessagesPage implements OnInit, OnDestroy {
     }
 
     private attachLocalVideo(retries = 20) {
-        const el = document.querySelector('video.local-video') as HTMLVideoElement;
+        const el = this.localVideoRef?.nativeElement as HTMLVideoElement;
         if (el && this.localStream) {
             if (el.srcObject !== this.localStream) {
                 el.srcObject = this.localStream;
@@ -569,7 +642,7 @@ export class MessagesPage implements OnInit, OnDestroy {
     }
 
     private attachRemoteVideo(retries = 20) {
-        const el = document.querySelector('video.remote-video') as HTMLVideoElement;
+        const el = this.remoteVideoRef?.nativeElement as HTMLVideoElement;
         if (el && this.remoteStream) {
             if (el.srcObject !== this.remoteStream) {
                 el.srcObject = this.remoteStream;
@@ -578,6 +651,55 @@ export class MessagesPage implements OnInit, OnDestroy {
         } else if (retries > 0 && this.remoteStream) {
             setTimeout(() => this.attachRemoteVideo(retries - 1), 150);
         }
+    }
+
+    // Video PiP: tap to swap big/small
+    toggleVideoSwap() {
+        this.videoSwapped = !this.videoSwapped;
+        this.pipX = 20;
+        this.pipY = 20;
+        this.cdr.detectChanges();
+        setTimeout(() => {
+            this.attachLocalVideo();
+            this.attachRemoteVideo();
+        }, 100);
+    }
+
+    // Video PiP: drag start
+    onPipPointerDown(event: PointerEvent) {
+        this.pipDragging = true;
+        this.pipMoved = false;
+        this.pipStartX = event.clientX;
+        this.pipStartY = event.clientY;
+        this.pipOrigX = this.pipX;
+        this.pipOrigY = this.pipY;
+        const target = event.target as HTMLElement;
+        target.setPointerCapture(event.pointerId);
+
+        const onMove = (e: PointerEvent) => {
+            if (!this.pipDragging) return;
+            const dx = e.clientX - this.pipStartX;
+            const dy = e.clientY - this.pipStartY;
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) this.pipMoved = true;
+            this.pipX = this.pipOrigX + dx;
+            this.pipY = this.pipOrigY + dy;
+            this.cdr.detectChanges();
+        };
+
+        const onUp = (e: PointerEvent) => {
+            this.pipDragging = false;
+            target.releasePointerCapture(e.pointerId);
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+            // If it was just a tap (no drag), swap
+            if (!this.pipMoved) {
+                this.toggleVideoSwap();
+            }
+        };
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+        event.preventDefault();
     }
 
     startAudioCall() {
@@ -592,17 +714,331 @@ export class MessagesPage implements OnInit, OnDestroy {
         this.callService.initiateCall(p.userId, p.name || p.username, p.username, p.profilePicture || '', 'video');
     }
 
-    scrollToBottom(instant = false) {
-        setTimeout(() => {
-            try {
-                if (this.messagesEnd) {
-                    this.messagesEnd.nativeElement.scrollIntoView({
-                        behavior: instant ? 'auto' : 'smooth',
-                        block: 'end'
+    // ─── Location Sharing ───
+    sendCurrentLocation() {
+        if (!this.selectedConversation || this.isSendingLocation) return;
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+        }
+        this.isSendingLocation = true;
+        this.cdr.detectChanges();
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const locationContent = `[location:${lat},${lng}]`;
+                this.messageService.sendMessage(this.selectedConversation!.userId, locationContent).subscribe({
+                    next: (res) => {
+                        if (res.success) {
+                            this.messages.push({
+                                id: res.data?.messageId || Date.now(),
+                                senderId: this.currentUserId,
+                                receiverId: this.selectedConversation!.userId,
+                                content: locationContent,
+                                mediaUrl: null,
+                                timestamp: new Date().toISOString(),
+                                isRead: false,
+                                isDeleted: false,
+                            });
+                            this.scrollToBottom();
+                        }
+                        this.isSendingLocation = false;
+                        this.cdr.detectChanges();
+                    },
+                    error: () => {
+                        alert('Failed to send location. Please try again.');
+                        this.isSendingLocation = false;
+                        this.cdr.detectChanges();
+                    }
+                });
+            },
+            (error) => {
+                this.isSendingLocation = false;
+                this.cdr.detectChanges();
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        alert('Location permission denied. Please allow location access in your browser settings.');
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        alert('Location information is unavailable.');
+                        break;
+                    case error.TIMEOUT:
+                        alert('Location request timed out. Please try again.');
+                        break;
+                    default:
+                        alert('An error occurred while getting your location.');
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+
+    isLocationMessage(msg: MessageItem): boolean {
+        return msg.content?.startsWith('[location:') && msg.content?.endsWith(']');
+    }
+
+    getLocationCoords(msg: MessageItem): { lat: number; lng: number } {
+        try {
+            const match = msg.content.match(/\[location:([-\d.]+),([-\d.]+)\]/);
+            if (match) {
+                return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+            }
+        } catch {}
+        return { lat: 0, lng: 0 };
+    }
+
+    // ─── Lightbox ───
+    openLightbox(url: string) {
+        this.lightboxImageUrl = url;
+        this.lightboxVisible = true;
+        this.cdr.detectChanges();
+    }
+
+    closeLightbox() {
+        this.lightboxVisible = false;
+        this.lightboxImageUrl = '';
+        this.cdr.detectChanges();
+    }
+
+    // ─── Voice Recording ───
+    async startRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Voice recording is not supported in your browser.');
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.mediaRecorder = new MediaRecorder(stream);
+            this.recordedChunks = [];
+            this.recordingTime = 0;
+            this.isRecording = true;
+            this.cdr.detectChanges();
+
+            this.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) this.recordedChunks.push(e.data);
+            };
+
+            this.mediaRecorder.start();
+            this.recordingInterval = setInterval(() => {
+                this.recordingTime++;
+                this.cdr.detectChanges();
+            }, 1000);
+        } catch (err) {
+            alert('Microphone access denied. Please allow microphone access.');
+        }
+    }
+
+    cancelRecording() {
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+            this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
+        }
+        if (this.recordingInterval) clearInterval(this.recordingInterval);
+        this.isRecording = false;
+        this.recordedChunks = [];
+        this.recordingTime = 0;
+        this.cdr.detectChanges();
+    }
+
+    stopAndSendRecording() {
+        if (!this.mediaRecorder || !this.selectedConversation) return;
+        this.mediaRecorder.onstop = () => {
+            this.mediaRecorder!.stream.getTracks().forEach(t => t.stop());
+            if (this.recordingInterval) clearInterval(this.recordingInterval);
+            this.isRecording = false;
+
+            const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+            const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+            const duration = this.recordingTime;
+            this.recordingTime = 0;
+            this.cdr.detectChanges();
+
+            this.mediaService.uploadFile(file).subscribe({
+                next: (res) => {
+                    if (res.success && res.data?.url) {
+                        const voiceContent = `[voice:${res.data.url}|${duration}]`;
+                        this.messageService.sendMessage(this.selectedConversation!.userId, voiceContent).subscribe({
+                            next: (msgRes) => {
+                                if (msgRes.success) {
+                                    this.messages.push({
+                                        id: msgRes.data?.messageId || Date.now(),
+                                        senderId: this.currentUserId,
+                                        receiverId: this.selectedConversation!.userId,
+                                        content: voiceContent,
+                                        mediaUrl: null,
+                                        timestamp: new Date().toISOString(),
+                                        isRead: false,
+                                        isDeleted: false,
+                                    });
+                                    this.scrollToBottom();
+                                    this.cdr.detectChanges();
+                                }
+                            },
+                            error: () => alert('Failed to send voice message.')
+                        });
+                    }
+                },
+                error: () => alert('Failed to upload voice recording.')
+            });
+        };
+        this.mediaRecorder.stop();
+    }
+
+    isVoiceMessage(msg: MessageItem): boolean {
+        return msg.content?.startsWith('[voice:') && msg.content?.endsWith(']');
+    }
+
+    getVoiceDuration(msg: MessageItem): string {
+        try {
+            const match = msg.content.match(/\[voice:.*\|(\d+)\]/);
+            if (match) {
+                const sec = parseInt(match[1]);
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return `${m}:${s.toString().padStart(2, '0')}`;
+            }
+        } catch {}
+        return '0:00';
+    }
+
+    private getVoiceUrl(msg: MessageItem): string {
+        try {
+            const match = msg.content.match(/\[voice:(.*?)\|/);
+            if (match) return match[1];
+        } catch {}
+        return '';
+    }
+
+    togglePlayVoice(msg: MessageItem) {
+        const url = this.getVoiceUrl(msg);
+        if (!url) return;
+
+        if (this.playingVoiceId === msg.id && this.voiceAudio) {
+            this.voiceAudio.pause();
+            this.playingVoiceId = null;
+            this.cdr.detectChanges();
+            return;
+        }
+
+        if (this.voiceAudio) { this.voiceAudio.pause(); }
+        this.voiceAudio = new Audio(url);
+        this.playingVoiceId = msg.id;
+        this.voiceWaveformBars = Array.from({ length: 28 }, () => Math.random() * 16 + 4);
+        this.cdr.detectChanges();
+        this.voiceAudio.play().catch(() => {});
+        this.voiceAudio.onended = () => {
+            this.playingVoiceId = null;
+            this.cdr.detectChanges();
+        };
+    }
+
+    // ─── Document Sharing ───
+    onDocumentSelected(event: Event) {
+        const input = event.target as HTMLInputElement;
+        if (!input.files?.length || !this.selectedConversation) return;
+        const file = input.files[0];
+        this.isUploadingDoc = true;
+        this.cdr.detectChanges();
+
+        this.mediaService.uploadFile(file).subscribe({
+            next: (res) => {
+                if (res.success && res.data?.url) {
+                    const docContent = `[doc:${res.data.url}|${file.name}]`;
+                    this.messageService.sendMessage(this.selectedConversation!.userId, docContent).subscribe({
+                        next: (msgRes) => {
+                            if (msgRes.success) {
+                                this.messages.push({
+                                    id: msgRes.data?.messageId || Date.now(),
+                                    senderId: this.currentUserId,
+                                    receiverId: this.selectedConversation!.userId,
+                                    content: docContent,
+                                    mediaUrl: null,
+                                    timestamp: new Date().toISOString(),
+                                    isRead: false,
+                                    isDeleted: false,
+                                });
+                                this.scrollToBottom();
+                            }
+                            this.isUploadingDoc = false;
+                            this.cdr.detectChanges();
+                        },
+                        error: () => {
+                            alert('Failed to send document.');
+                            this.isUploadingDoc = false;
+                            this.cdr.detectChanges();
+                        }
                     });
                 }
-            } catch { }
-        }, 50);
+            },
+            error: () => {
+                alert('Failed to upload document.');
+                this.isUploadingDoc = false;
+                this.cdr.detectChanges();
+            }
+        });
+        input.value = '';
+    }
+
+    isDocumentMessage(msg: MessageItem): boolean {
+        return msg.content?.startsWith('[doc:') && msg.content?.endsWith(']');
+    }
+
+    getDocumentUrl(msg: MessageItem): string {
+        try {
+            const match = msg.content.match(/\[doc:(.*?)\|/);
+            if (match) return match[1];
+        } catch {}
+        return '';
+    }
+
+    getDocumentName(msg: MessageItem): string {
+        try {
+            const match = msg.content.match(/\[doc:.*?\|(.*?)\]/);
+            if (match) return match[1];
+        } catch {}
+        return 'Document';
+    }
+
+    downloadDocument(msg: MessageItem) {
+        const url = this.getDocumentUrl(msg);
+        const name = this.getDocumentName(msg);
+        if (!url) return;
+
+        fetch(url)
+            .then(res => res.blob())
+            .then(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = name || 'document';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            })
+            .catch(() => {
+                // Fallback: open in new tab
+                window.open(url, '_blank');
+            });
+    }
+
+    scrollToBottom(instant = false) {
+        // Use multiple frames + timeout to ensure DOM is fully rendered
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    try {
+                        if (this.messagesEnd) {
+                            this.messagesEnd.nativeElement.scrollIntoView({
+                                behavior: instant ? 'auto' : 'smooth',
+                                block: 'end'
+                            });
+                        }
+                    } catch { }
+                });
+            });
+        }, instant ? 100 : 50);
     }
 
 }

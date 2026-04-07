@@ -10,7 +10,9 @@ import { ConnectionService } from '../../../core/services/connection.service';
 import { HashtagTextComponent } from '../../../shared/components/hashtag-text/hashtag-text.component';
 import { InteractionService } from '../../../core/services/interaction.service';
 import { MessageService } from '../../../core/services/message.service';
+import { AudioPlayerService } from '../../../core/services/audio-player.service';
 import { FormsModule } from '@angular/forms';
+import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
 
 @Component({
     selector: 'app-bookmarks-page',
@@ -38,6 +40,7 @@ export class BookmarksPage implements OnInit {
         private connectionService: ConnectionService,
         private interactionService: InteractionService,
         private messageService: MessageService,
+        private audioService: AudioPlayerService,
         private router: Router,
         private cdr: ChangeDetectorRef
     ) { }
@@ -178,21 +181,19 @@ export class BookmarksPage implements OnInit {
         });
     }
 
-    getRelativeTime(dateString: string | undefined): string {
-        if (!dateString) return '';
-    const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '';
-        const now = new Date();
-        const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
-        if (seconds < 60) return 'just now';
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return minutes + 'm ago';
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return hours + 'h ago';
-        const days = Math.floor(hours / 24);
-        if (days < 7) return days + 'd ago';
-        if (days < 30) return Math.floor(days / 7) + 'w ago';
-        if (days < 365) return Math.floor(days / 30) + 'mo ago';
-        return Math.floor(days / 365) + 'y ago';
+    getRelativeTime(value: any): string {
+        return sharedGetRelativeTime(value);
+    }
+
+    togglePostAudio(post: any) {
+        if (post.songTitle) {
+            this.audioService.toggle(post.songTitle, post.songGenre || '');
+            this.cdr.markForCheck();
+        }
+    }
+
+    isPostPlaying(post: any): boolean {
+        if (!post.songTitle) return false;
+        return this.audioService.getIsPlaying() && this.audioService.getCurrentSongKey() === `${post.songTitle}::${post.songGenre || ''}`;
     }
 }

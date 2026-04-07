@@ -1,0 +1,420 @@
+<div class="app-layout">
+    <app-navbar></app-navbar>
+    <div class="main-container">
+        <aside class="sidebar-column"><app-sidebar></app-sidebar></aside>
+
+        <main class="feed-column collab-column">
+            <div class="collab-page glass-card">
+                <div class="collab-header">
+                    <div class="collab-title"><i class="fa-solid fa-handshake"></i><h2>Paid Partnerships</h2></div>
+                    <button class="btn-primary invite-btn" *ngIf="isBusiness" (click)="openInviteModal()"><i class="fa-solid fa-plus"></i> Invite Creator</button>
+                </div>
+
+                <div class="collab-tabs">
+                    <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="switchTab('all')">All</button>
+                    <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="switchTab('pending')"><i class="fa-solid fa-clock"></i> Pending</button>
+                    <button class="tab-btn" [class.active]="activeTab === 'active'" (click)="switchTab('active')"><i class="fa-solid fa-check-circle"></i> Active</button>
+                    <button class="tab-btn" [class.active]="activeTab === 'rejected'" (click)="switchTab('rejected')">Declined</button>
+                    <button class="tab-btn" [class.active]="activeTab === 'revoked'" (click)="switchTab('revoked')">Revoked</button>
+                </div>
+
+                <div class="collab-loading" *ngIf="isLoading"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+
+                <div class="collab-empty" *ngIf="!isLoading && collaborations.length === 0">
+                    <i class="fa-solid fa-handshake-slash"></i>
+                    <h3 *ngIf="isBusiness">No partnerships yet</h3>
+                    <h3 *ngIf="isCreator">No partnership invites yet</h3>
+                    <p *ngIf="isBusiness">Invite creators to promote your posts with a paid partnership contract.</p>
+                    <p *ngIf="isCreator">Businesses will send you paid partnership invites. Review the contract and payment terms before accepting.</p>
+                    <button class="btn-primary" *ngIf="isBusiness" (click)="openInviteModal()"><i class="fa-solid fa-plus"></i> Invite Your First Creator</button>
+                </div>
+
+                <!-- ═══ Collaborations List ═══ -->
+                <div class="collab-list" *ngIf="!isLoading && collaborations.length > 0">
+                    <div class="collab-card" *ngFor="let collab of collaborations">
+                        <div class="collab-card-header">
+                            <img [src]="isBusiness ? getAvatar(collab.creatorPic, collab.creatorName) : getAvatar(collab.businessPic, collab.businessName)" class="collab-avatar" alt="">
+                            <div class="collab-card-info">
+                                <strong>{{ isBusiness ? collab.creatorName : collab.businessName }}</strong>
+                                <span>&#64;{{ isBusiness ? collab.creatorUsername : collab.businessUsername }}</span>
+                                <span class="brand-tag" *ngIf="collab.contract?.brandName">{{ collab.contract?.brandName }}</span>
+                            </div>
+                            <div class="collab-status" [style.color]="getStatusColor(collab.status)">
+                                <i class="fa-solid" [ngClass]="getStatusIcon(collab.status)"></i>
+                                {{ collab.status }}
+                            </div>
+                        </div>
+
+                        <p class="collab-message" *ngIf="collab.message">{{ collab.message }}</p>
+
+                        <!-- Payment + Contract Summary -->
+                        <div class="collab-contract-summary" *ngIf="collab.contract">
+                            <div class="pay-grid">
+                                <div class="pay-item" *ngIf="collab.contract?.fixedFee">
+                                    <span class="pay-label">Fixed Fee</span>
+                                    <span class="pay-value">₹{{ collab.contract?.fixedFee }}</span>
+                                </div>
+                                <div class="pay-item" *ngIf="collab.contract?.ratePerView">
+                                    <span class="pay-label">Per {{ collab.contract?.viewMilestone }} Views</span>
+                                    <span class="pay-value">₹{{ collab.contract?.ratePerView }}</span>
+                                </div>
+                                <div class="pay-item">
+                                    <span class="pay-label">Duration</span>
+                                    <span class="pay-value">{{ collab.contract?.durationDays }}d</span>
+                                </div>
+                                <div class="pay-item">
+                                    <span class="pay-label">Schedule</span>
+                                    <span class="pay-value">{{ collab.contract?.paymentSchedule }}</span>
+                                </div>
+                            </div>
+                            <div class="contract-row" *ngIf="collab.contract?.startDate">
+                                <span class="contract-label">Active</span>
+                                <span>{{ formatDate(collab.contract!.startDate!) }} — {{ formatDate(collab.contract!.endDate!) }}</span>
+                            </div>
+                            <div class="contract-row">
+                                <span class="contract-label">Contract</span>
+                                <span [style.color]="collab.contract?.acceptedByCreator ? '#22c55e' : '#eab308'">
+                                    {{ collab.contract?.acceptedByCreator ? 'Signed' : 'Pending Signature' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="collab-date"><i class="fa-regular fa-calendar"></i> {{ formatDate(collab.createdAt) }}</div>
+
+                        <!-- Showcase Items for Active Collaborations -->
+                        <div class="showcase-section" *ngIf="collab.status === 'ACTIVE' && isCreator" [class.loaded]="getShowcase(collab.id).length > 0">
+                            <div *ngIf="!showcaseItems.has(collab.id) && !showcaseLoading.has(collab.id)" style="margin-bottom:0.5rem">
+                                <button class="btn-secondary" style="width:100%" (click)="loadShowcase(collab.businessId, collab.id)">
+                                    <i class="fa-solid fa-store"></i> View Business Products & Showcase
+                                </button>
+                            </div>
+                            <div *ngIf="showcaseLoading.has(collab.id)" class="showcase-loading">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading showcase...
+                            </div>
+                            <div *ngIf="getShowcase(collab.id).length > 0" class="showcase-grid">
+                                <div class="showcase-card" *ngFor="let item of getShowcase(collab.id)">
+                                    <div class="showcase-info">
+                                        <strong>{{ item.name }}</strong>
+                                        <span class="showcase-type">{{ item.type }}</span>
+                                        <span class="showcase-price" *ngIf="item.price">₹{{ item.price }}</span>
+                                    </div>
+                                    <a *ngIf="item.link" [href]="item.link" target="_blank" class="showcase-link">
+                                        <i class="fa-solid fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div *ngIf="showcaseItems.has(collab.id) && getShowcase(collab.id).length === 0 && !showcaseLoading.has(collab.id)" class="showcase-empty">
+                                <i class="fa-solid fa-box-open"></i> No showcase items yet
+                            </div>
+                        </div>
+
+                        <div class="collab-actions">
+                            <ng-container *ngIf="isCreator && collab.status === 'PENDING'">
+                                <button class="btn-primary" (click)="viewContract(collab)"><i class="fa-solid fa-file-contract"></i> Review & Accept</button>
+                                <button class="btn-secondary btn-danger" (click)="rejectInvite(collab)"><i class="fa-solid fa-times"></i> Decline</button>
+                            </ng-container>
+                            <ng-container *ngIf="isBusiness && collab.status === 'ACTIVE'">
+                                <button class="btn-primary" (click)="openGrantModal(collab)"><i class="fa-solid fa-bullhorn"></i> Promote Post</button>
+                                <button class="btn-secondary" (click)="downloadContractPdf(collab)"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                                <button class="btn-secondary btn-danger" (click)="revokeCollab(collab)"><i class="fa-solid fa-ban"></i> Revoke</button>
+                            </ng-container>
+                            <ng-container *ngIf="isCreator && collab.status === 'ACTIVE'">
+                                <button class="btn-secondary" (click)="viewContract(collab)"><i class="fa-solid fa-file-contract"></i> View Contract</button>
+                                <button class="btn-secondary" (click)="downloadContractPdf(collab)"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+                            </ng-container>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="widgets-column">
+            <div class="widget-card glass-card">
+                <div class="widget-header"><i class="fa-solid fa-handshake"></i><h3>How It Works</h3></div>
+                <div class="widget-content" style="padding: 1rem 0;">
+                    <div class="how-step" *ngIf="isBusiness">
+                        <span class="step-num">1</span><p>Search and invite a creator</p>
+                    </div>
+                    <div class="how-step" *ngIf="isBusiness">
+                        <span class="step-num">2</span><p>Set payment terms (fixed + per view)</p>
+                    </div>
+                    <div class="how-step" *ngIf="isBusiness">
+                        <span class="step-num">3</span><p>Creator signs the digital contract</p>
+                    </div>
+                    <div class="how-step" *ngIf="isBusiness">
+                        <span class="step-num">4</span><p>Grant promotion on your posts</p>
+                    </div>
+                    <div class="how-step" *ngIf="isCreator">
+                        <span class="step-num">1</span><p>Business sends you an invite</p>
+                    </div>
+                    <div class="how-step" *ngIf="isCreator">
+                        <span class="step-num">2</span><p>Review the contract and payment</p>
+                    </div>
+                    <div class="how-step" *ngIf="isCreator">
+                        <span class="step-num">3</span><p>Sign & accept the partnership</p>
+                    </div>
+                    <div class="how-step" *ngIf="isCreator">
+                        <span class="step-num">4</span><p>Promoted posts show "Paid Partnership"</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<!-- ══════ INVITE MODAL (Multi-Step) ══════ -->
+<div class="modal-overlay" *ngIf="showInviteModal" (click)="closeInviteModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-handshake"></i> New Paid Partnership</h3>
+            <button class="modal-close" (click)="closeInviteModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Step progress -->
+        <div class="step-progress" *ngIf="selectedCreator">
+            <div class="step-dot" [class.active]="inviteStep >= 1" [class.done]="inviteStep > 1">1</div>
+            <div class="step-line" [class.active]="inviteStep > 1"></div>
+            <div class="step-dot" [class.active]="inviteStep >= 2" [class.done]="inviteStep > 2">2</div>
+            <div class="step-line" [class.active]="inviteStep > 2"></div>
+            <div class="step-dot" [class.active]="inviteStep >= 3" [class.done]="inviteStep > 3">3</div>
+            <div class="step-line" [class.active]="inviteStep > 3"></div>
+            <div class="step-dot" [class.active]="inviteStep >= 4">4</div>
+        </div>
+
+        <!-- Step 1: Select Creator -->
+        <div class="modal-body" *ngIf="!selectedCreator">
+            <label class="form-label">Search Creators</label>
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" [(ngModel)]="searchQuery" (input)="searchCreators()" placeholder="Search by name or username...">
+            </div>
+            <div class="search-results" *ngIf="searchResults.length > 0">
+                <div class="search-item" *ngFor="let u of searchResults" (click)="selectCreatorForInvite(u)">
+                    <img [src]="getAvatar(u.profilePicture, u.name)" alt="">
+                    <div><strong>{{ u.name }}</strong><span>&#64;{{ u.username }}</span></div>
+                    <i class="fa-solid fa-chevron-right" style="color:var(--text-muted)"></i>
+                </div>
+            </div>
+            <div class="search-empty" *ngIf="searchQuery && searchResults.length === 0 && !isSearching"><p>No creators found</p></div>
+        </div>
+
+        <!-- Step 2: Brand Info -->
+        <div class="modal-body" *ngIf="selectedCreator && inviteStep === 1">
+            <div class="selected-creator">
+                <img [src]="getAvatar(selectedCreator.profilePicture, selectedCreator.name)" alt="">
+                <div><strong>{{ selectedCreator.name }}</strong><span>&#64;{{ selectedCreator.username }}</span></div>
+                <button class="btn-sm" (click)="selectedCreator = null">Change</button>
+            </div>
+            <div class="step-title"><i class="fa-solid fa-building"></i> Brand Information</div>
+            <label class="form-label">Brand / Company Name</label>
+            <input type="text" [(ngModel)]="brandName" placeholder="Your brand name">
+            <label class="form-label">Brand Website</label>
+            <input type="url" [(ngModel)]="brandWebsite" placeholder="https://yourbrand.com">
+            <label class="form-label">Personal Message (optional)</label>
+            <textarea [(ngModel)]="inviteMessage" rows="2" placeholder="Hi! We'd love to work with you..."></textarea>
+        </div>
+
+        <!-- Step 3: Payment Terms -->
+        <div class="modal-body" *ngIf="selectedCreator && inviteStep === 2">
+            <div class="step-title"><i class="fa-solid fa-indian-rupee-sign"></i> Payment Terms</div>
+
+            <label class="form-label">Fixed Fee (one-time)</label>
+            <div class="input-with-prefix">
+                <span class="input-prefix">₹</span>
+                <input type="number" [(ngModel)]="fixedFee" min="0" placeholder="0">
+            </div>
+
+            <label class="form-label">Performance Pay</label>
+            <div class="perf-pay-row">
+                <div class="input-with-prefix" style="flex:1">
+                    <span class="input-prefix">₹</span>
+                    <input type="number" [(ngModel)]="ratePerView" min="0" placeholder="2">
+                </div>
+                <span class="perf-sep">per</span>
+                <div class="input-with-prefix" style="flex:1">
+                    <input type="number" [(ngModel)]="viewMilestone" min="1" placeholder="10">
+                    <span class="input-suffix">views</span>
+                </div>
+            </div>
+            <p class="calc-note">Effective rate: ₹{{ getPerViewRate() }} per view</p>
+
+            <label class="form-label">Payment Schedule</label>
+            <select [(ngModel)]="paymentSchedule">
+                <option value="WEEKLY">Weekly</option>
+                <option value="MONTHLY">Monthly</option>
+                <option value="ON_COMPLETION">On Completion</option>
+            </select>
+
+            <label class="form-label">Campaign Duration</label>
+            <div class="duration-row">
+                <input type="number" [(ngModel)]="durationDays" min="1" max="365">
+                <span class="input-suffix">days</span>
+            </div>
+        </div>
+
+        <!-- Step 4: Rules & Guidelines -->
+        <div class="modal-body" *ngIf="selectedCreator && inviteStep === 3">
+            <div class="step-title"><i class="fa-solid fa-shield-halved"></i> Promotion Rules</div>
+            <label class="form-label">Promotion Rules *</label>
+            <textarea [(ngModel)]="promotionRules" rows="4" placeholder="Creator must follow brand content guidelines and disclose the partnership..."></textarea>
+            <label class="form-label">Content Guidelines (optional)</label>
+            <textarea [(ngModel)]="contentGuidelines" rows="3" placeholder="E.g. Post must include product in the first 3 seconds..."></textarea>
+        </div>
+
+        <!-- Step 5: Review -->
+        <div class="modal-body" *ngIf="selectedCreator && inviteStep === 4">
+            <div class="step-title"><i class="fa-solid fa-eye"></i> Review Partnership</div>
+            <div class="review-card">
+                <div class="review-row"><span>Creator</span><strong>{{ selectedCreator.name }}</strong></div>
+                <div class="review-row" *ngIf="brandName"><span>Brand</span><strong>{{ brandName }}</strong></div>
+                <div class="review-row"><span>Fixed Fee</span><strong>₹{{ fixedFee }}</strong></div>
+                <div class="review-row"><span>Per {{ viewMilestone }} Views</span><strong>₹{{ ratePerView }}</strong></div>
+                <div class="review-row"><span>Schedule</span><strong>{{ paymentSchedule }}</strong></div>
+                <div class="review-row"><span>Duration</span><strong>{{ durationDays }} days</strong></div>
+            </div>
+            <p class="review-note">A digital contract will be sent to the creator. They must review and sign it before the partnership becomes active.</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer" *ngIf="selectedCreator">
+            <button class="btn-secondary" *ngIf="inviteStep > 1" (click)="prevInviteStep()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <span style="flex:1"></span>
+            <button class="btn-secondary" (click)="closeInviteModal()">Cancel</button>
+            <button class="btn-primary" *ngIf="inviteStep < 4" (click)="nextInviteStep()">Next <i class="fa-solid fa-arrow-right"></i></button>
+            <button class="btn-primary" *ngIf="inviteStep === 4" (click)="sendInvite()" [disabled]="isInviting || !promotionRules.trim()">
+                <i class="fa-solid fa-paper-plane" *ngIf="!isInviting"></i>
+                <i class="fa-solid fa-circle-notch fa-spin" *ngIf="isInviting"></i>
+                Send Partnership Invite
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════ CONTRACT MODAL ══════ -->
+<div class="modal-overlay" *ngIf="showContractModal" (click)="showContractModal = false">
+    <div class="modal-card contract-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-file-contract"></i> Partnership Contract</h3>
+            <button class="modal-close" (click)="showContractModal = false"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body" *ngIf="selectedCollaboration">
+            <div class="contract-parties">
+                <div class="party">
+                    <img [src]="getAvatar(selectedCollaboration.businessPic, selectedCollaboration.businessName)" alt="">
+                    <div><strong>{{ selectedCollaboration.businessName }}</strong><span class="party-role">Business</span></div>
+                </div>
+                <i class="fa-solid fa-arrows-left-right contract-arrow"></i>
+                <div class="party">
+                    <img [src]="getAvatar(selectedCollaboration.creatorPic, selectedCollaboration.creatorName)" alt="">
+                    <div><strong>{{ selectedCollaboration.creatorName }}</strong><span class="party-role">Creator</span></div>
+                </div>
+            </div>
+
+            <div class="contract-section" *ngIf="selectedCollaboration.message">
+                <h4><i class="fa-solid fa-message"></i> Message</h4>
+                <p>{{ selectedCollaboration.message }}</p>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="contract-section" *ngIf="selectedCollaboration.contract">
+                <h4><i class="fa-solid fa-indian-rupee-sign"></i> Payment Terms</h4>
+                <div class="pay-grid modal-pay-grid">
+                    <div class="pay-item" *ngIf="selectedCollaboration.contract?.fixedFee">
+                        <span class="pay-label">Fixed Fee</span>
+                        <span class="pay-value">₹{{ selectedCollaboration.contract?.fixedFee }}</span>
+                    </div>
+                    <div class="pay-item" *ngIf="selectedCollaboration.contract?.ratePerView">
+                        <span class="pay-label">Per {{ selectedCollaboration.contract?.viewMilestone }} Views</span>
+                        <span class="pay-value">₹{{ selectedCollaboration.contract?.ratePerView }}</span>
+                    </div>
+                    <div class="pay-item">
+                        <span class="pay-label">Schedule</span>
+                        <span class="pay-value">{{ selectedCollaboration.contract?.paymentSchedule }}</span>
+                    </div>
+                    <div class="pay-item">
+                        <span class="pay-label">Duration</span>
+                        <span class="pay-value">{{ selectedCollaboration.contract?.durationDays }} days</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contract-section" *ngIf="selectedCollaboration.contract">
+                <h4><i class="fa-solid fa-shield-halved"></i> Promotion Rules</h4>
+                <p>{{ selectedCollaboration.contract?.promotionRules }}</p>
+            </div>
+
+            <div class="contract-section" *ngIf="selectedCollaboration.contract?.contentGuidelines">
+                <h4><i class="fa-solid fa-list-check"></i> Content Guidelines</h4>
+                <p>{{ selectedCollaboration.contract?.contentGuidelines }}</p>
+            </div>
+
+            <div class="contract-section" *ngIf="selectedCollaboration.contract?.startDate">
+                <h4><i class="fa-solid fa-calendar-days"></i> Active Period</h4>
+                <p>{{ formatDate(selectedCollaboration.contract!.startDate!) }} — {{ formatDate(selectedCollaboration.contract!.endDate!) }}</p>
+            </div>
+
+            <!-- Agreement checkbox for pending -->
+            <div class="contract-agreement" *ngIf="selectedCollaboration.status === 'PENDING'">
+                <label class="checkbox-label">
+                    <input type="checkbox" [(ngModel)]="contractAgreed">
+                    <span>I have read and agree to the terms. I understand promoted posts will display <strong>"Paid Partnership with {{ selectedCollaboration.contract?.brandName || selectedCollaboration.businessName }}"</strong> and payment is based on verified views.</span>
+                </label>
+            </div>
+
+            <div class="contract-signed" *ngIf="selectedCollaboration.contract?.acceptedByCreator">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Contract signed on {{ formatDate(selectedCollaboration.contract?.acceptedAt || '') }}</span>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-secondary" (click)="downloadContractPdf(selectedCollaboration!)" *ngIf="selectedCollaboration">
+                <i class="fa-solid fa-file-pdf"></i> Download PDF
+            </button>
+            <span style="flex:1"></span>
+            <ng-container *ngIf="selectedCollaboration?.status === 'PENDING'">
+                <button class="btn-secondary btn-danger" (click)="rejectInvite(selectedCollaboration!); showContractModal = false">
+                    <i class="fa-solid fa-times"></i> Decline
+                </button>
+                <button class="btn-primary" (click)="acceptContract()" [disabled]="!contractAgreed || isAccepting">
+                    <i class="fa-solid fa-signature" *ngIf="!isAccepting"></i>
+                    <i class="fa-solid fa-circle-notch fa-spin" *ngIf="isAccepting"></i>
+                    Sign & Accept
+                </button>
+            </ng-container>
+        </div>
+    </div>
+</div>
+
+<!-- ══════ GRANT PROMOTION MODAL ══════ -->
+<div class="modal-overlay" *ngIf="showGrantModal" (click)="showGrantModal = false">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-bullhorn"></i> Promote Post</h3>
+            <button class="modal-close" (click)="showGrantModal = false"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <label class="form-label">Post ID</label>
+            <input type="number" [(ngModel)]="grantPostId" placeholder="Enter post ID">
+            <label class="form-label">CTA Button</label>
+            <select [(ngModel)]="grantCtaLabel">
+                <option value="Visit Website">Visit Website</option>
+                <option value="Shop Now">Shop Now</option>
+                <option value="Contact Us">Contact Us</option>
+                <option value="Learn More">Learn More</option>
+                <option value="Sign Up">Sign Up</option>
+            </select>
+            <label class="form-label">CTA URL</label>
+            <input type="url" [(ngModel)]="grantCtaUrl" placeholder="https://yourbusiness.com">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" (click)="showGrantModal = false">Cancel</button>
+            <button class="btn-primary" (click)="grantPromotion()" [disabled]="!grantPostId || isGranting">
+                <i class="fa-solid fa-check" *ngIf="!isGranting"></i>
+                <i class="fa-solid fa-circle-notch fa-spin" *ngIf="isGranting"></i>
+                Grant Promotion
+            </button>
+        </div>
+    </div>
+</div>

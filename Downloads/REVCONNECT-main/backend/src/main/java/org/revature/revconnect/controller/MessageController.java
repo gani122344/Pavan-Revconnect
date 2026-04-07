@@ -195,7 +195,7 @@ public class MessageController {
         map.put("receiverId", message.getReceiver().getId());
         map.put("content", message.getContent());
         map.put("mediaUrl", message.getMediaUrl());
-        map.put("timestamp", message.getTimestamp());
+        map.put("timestamp", message.getTimestamp() != null ? message.getTimestamp().toString() : null);
         map.put("isRead", message.isRead());
         map.put("isDeleted", message.isDeleted());
         return map;

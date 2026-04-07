@@ -597,3 +597,57 @@
         opacity: 1;
     }
 }
+
+/* ---- Instagram-style Song Label + Audio Toggle ---- */
+.post-song-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    margin-top: 1px;
+}
+.post-song-label i {
+    font-size: 0.65rem;
+    color: var(--text-muted, #94a3b8);
+}
+.post-song-label span {
+    font-size: 0.72rem;
+    color: var(--text-muted, #94a3b8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+.post-song-label:hover span {
+    color: var(--text-secondary, #cbd5e1);
+}
+.media-container {
+    position: relative;
+}
+.post-media-wrap {
+    position: relative;
+    overflow: hidden;
+}
+.post-audio-toggle {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    z-index: 3;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s, transform 0.15s;
+}
+.post-audio-toggle:hover {
+    background: rgba(0, 0, 0, 0.75);
+    transform: scale(1.1);
+}

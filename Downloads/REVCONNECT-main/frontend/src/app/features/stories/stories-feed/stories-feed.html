@@ -1,4 +1,4 @@
-<div class="stories-timeline mt-4 mb-4">
+<div class="stories-timeline mt-2 mb-2">
     <div class="stories-scroll-wrapper">
         <ul class="stories-list">
 
@@ -227,6 +227,17 @@
         </div>
     </div>
 
+    <!-- Song Badge - Instagram style (top, after username) -->
+    <div class="story-song-badge-top" *ngIf="activeStoryToView.songTitle" (click)="toggleAudio(); $event.stopPropagation()">
+        <i class="fa-solid fa-music"></i>
+        <div class="song-name-scroll">
+            <span class="song-name-marquee">{{ activeStoryToView.songTitle }}</span>
+        </div>
+        <div class="eq-bars-mini" [class.playing]="isAudioPlaying">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+
     <!-- Story Content - tap left/right to navigate -->
     <div class="viewer-main-content" (click)="onStoryAreaClick($event)">
         <div class="media-container" (click)="$event.stopPropagation()"
@@ -244,16 +255,6 @@
             <div class="tap-zone tap-zone-left" (click)="prevStory(); $event.stopPropagation()"></div>
             <div class="tap-zone tap-zone-right" (click)="nextStory(); $event.stopPropagation()"></div>
 
-            <!-- Song Badge with animated equalizer -->
-            <div class="story-song-badge" *ngIf="activeStoryToView.songTitle" (click)="toggleAudio(); $event.stopPropagation()">
-                <div class="equalizer-bars" [class.playing]="isAudioPlaying">
-                    <span></span><span></span><span></span><span></span>
-                </div>
-                <div class="song-info-scroll">
-                    <span class="song-marquee">{{ activeStoryToView.songTitle }} &mdash; {{ activeStoryToView.songArtist }}</span>
-                </div>
-                <i class="fa-solid" [ngClass]="isAudioPlaying ? 'fa-pause' : 'fa-play'" style="color:white; font-size:0.75rem;"></i>
-            </div>
 
             <div class="caption-container" *ngIf="activeStoryToView.caption">
                 <p class="viewer-caption">{{ activeStoryToView.caption }}</p>

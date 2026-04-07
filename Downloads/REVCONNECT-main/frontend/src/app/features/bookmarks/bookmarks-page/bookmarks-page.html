@@ -45,6 +45,10 @@
                                     <h4>{{bookmark.post.authorName}}</h4>
                                     <span>&#64;{{bookmark.post.authorUsername}} •
                                         {{getRelativeTime(bookmark.post.createdAt)}}</span>
+                                    <div class="post-song-label" *ngIf="bookmark.post.songTitle" (click)="togglePostAudio(bookmark.post)">
+                                        <i class="fa-solid fa-music"></i>
+                                        <span>{{bookmark.post.songTitle}}</span>
+                                    </div>
                                 </div>
                             </div>
                             <button class="btn-unsave" (click)="removeBookmark(bookmark.post.id)"
@@ -75,7 +79,12 @@
 
                             <div class="media-container"
                                 *ngIf="bookmark.post.mediaUrls && bookmark.post.mediaUrls.length > 0">
-                                <img [src]="bookmark.post.mediaUrls[0]" alt="Post media">
+                                <div class="post-media-wrap">
+                                    <img [src]="bookmark.post.mediaUrls[0]" alt="Post media">
+                                    <button class="post-audio-toggle" *ngIf="bookmark.post.songTitle" (click)="togglePostAudio(bookmark.post); $event.stopPropagation()">
+                                        <i class="fa-solid" [ngClass]="isPostPlaying(bookmark.post) ? 'fa-volume-high' : 'fa-volume-xmark'"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Business Call To Action -->

@@ -54,8 +54,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/settings/settings-page/settings-page').then(m => m.SettingsPage)
   },
   {
+    path: 'wallet',
+    loadComponent: () => import('./features/wallet/wallet-page/wallet-page').then(m => m.WalletPage)
+  },
+  {
     path: 'analytics',
     loadComponent: () => import('./features/analytics/analytics-dashboard/analytics-dashboard').then(m => m.AnalyticsDashboard)
+  },
+  {
+    path: 'collaborations',
+    loadComponent: () => import('./features/collaborations/collaborations-page/collaborations-page').then(m => m.CollaborationsPage)
   },
   {
     path: '**',

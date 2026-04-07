@@ -15,10 +15,15 @@ public class MusicProxyController {
     @GetMapping("/search")
     public ResponseEntity<String> searchSongs(@RequestParam String query) {
         try {
-            String url = "https://itunes.apple.com/search?term=" +
-                java.net.URLEncoder.encode(query, "UTF-8") +
-                "&media=music&limit=5&country=IN";
+            String encoded = java.net.URLEncoder.encode(query, "UTF-8");
+            // Try global search first (wider catalog with more preview URLs)
+            String url = "https://itunes.apple.com/search?term=" + encoded + "&media=music&limit=10";
             String response = restTemplate.getForObject(url, String.class);
+            // If no results, try India-specific
+            if (response != null && response.contains("\"resultCount\":0")) {
+                url = "https://itunes.apple.com/search?term=" + encoded + "&media=music&limit=10&country=IN";
+                response = restTemplate.getForObject(url, String.class);
+            }
             return ResponseEntity.ok()
                 .header("Content-Type", "application/json")
                 .body(response);

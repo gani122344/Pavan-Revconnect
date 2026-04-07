@@ -218,6 +218,10 @@
                                         {{post.authorName}}
                                     </h4>
                                     <span>&#64;{{post.authorUsername}} • {{getRelativeTime(post.createdAt)}}</span>
+                                    <div class="post-song-label" *ngIf="post.songTitle" (click)="togglePostAudio(post)">
+                                        <i class="fa-solid fa-music"></i>
+                                        <span>{{post.songTitle}}</span>
+                                    </div>
                                     <div class="partnership-badge" *ngIf="post.isPromotional">
                                         <i class="fa-solid fa-handshake" style="color: var(--accent-primary);"></i> Paid
                                         Partnership
@@ -264,7 +268,12 @@
                                 <video [src]="post.mediaUrls[0]" controls class="post-image"
                                     style="width: 100%; border-radius: 8px; margin-top: 1rem;"></video>
                                 } @else if (post.mediaUrls && post.mediaUrls.length > 0) {
-                                <img [src]="post.mediaUrls[0]" alt="Post attachment" class="post-image">
+                                <div class="post-media-wrap">
+                                    <img [src]="post.mediaUrls[0]" alt="Post attachment" class="post-image">
+                                    <button class="post-audio-toggle" *ngIf="post.songTitle" (click)="togglePostAudio(post); $event.stopPropagation()">
+                                        <i class="fa-solid" [ngClass]="isPostPlaying(post) ? 'fa-volume-high' : 'fa-volume-xmark'"></i>
+                                    </button>
+                                </div>
                                 }
                                 <!-- Business Call To Action -->
                                 <div class="post-cta" *ngIf="post.ctaLabel && post.ctaUrl">

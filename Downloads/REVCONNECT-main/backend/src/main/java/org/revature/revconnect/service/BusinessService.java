@@ -10,12 +10,15 @@ import org.revature.revconnect.exception.BadRequestException;
 import org.revature.revconnect.mapper.BusinessProfileMapper;
 import org.revature.revconnect.exception.ResourceNotFoundException;
 import org.revature.revconnect.model.BusinessProfile;
+import org.revature.revconnect.model.Post;
 import org.revature.revconnect.model.PostAnalytics;
+import org.revature.revconnect.model.PostViewer;
 import org.revature.revconnect.model.User;
 import org.revature.revconnect.repository.BusinessProfileRepository;
 import org.revature.revconnect.repository.ConnectionRepository;
 import org.revature.revconnect.repository.PostAnalyticsRepository;
 import org.revature.revconnect.repository.PostRepository;
+import org.revature.revconnect.repository.PostViewerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,6 +41,7 @@ public class BusinessService {
     private final BusinessProfileRepository businessProfileRepository;
     private final PostAnalyticsRepository postAnalyticsRepository;
     private final PostRepository postRepository;
+    private final PostViewerRepository postViewerRepository;
     private final ConnectionRepository connectionRepository;
     private final AuthService authService;
     private final BusinessProfileMapper businessProfileMapper;
@@ -208,7 +212,27 @@ public class BusinessService {
 
     @Transactional
     public void recordPostView(Long postId) {
-        log.debug("Recording view for post: {}", postId);
+        User currentUser = authService.getCurrentUser();
+        // Don't count views from the post owner
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) return;
+        if (post.getUser().getId().equals(currentUser.getId())) {
+            log.debug("Skipping view for post {} - viewer is the owner", postId);
+            return;
+        }
+        // Only count unique views per user per post
+        if (postViewerRepository.existsByPostIdAndUserId(postId, currentUser.getId())) {
+            log.debug("Skipping duplicate view for post {} by user {}", postId, currentUser.getId());
+            return;
+        }
+        // Record the viewer
+        PostViewer viewer = PostViewer.builder()
+                .post(post)
+                .user(currentUser)
+                .build();
+        postViewerRepository.save(viewer);
+        // Now increment the analytics count
+        log.debug("Recording unique view for post: {} by user: {}", postId, currentUser.getId());
         updateAnalytics(postId, pa -> pa.setViews(pa.getViews() + 1));
     }
 
@@ -240,6 +264,12 @@ public class BusinessService {
     public List<Map<String, Object>> getShowcase() {
         User currentUser = authService.getCurrentUser();
         return businessProfileRepository.findByUserId(currentUser.getId())
+                .map(profile -> parseShowcase(profile.getDescription()))
+                .orElse(new ArrayList<>());
+    }
+
+    public List<Map<String, Object>> getShowcaseByUserId(Long userId) {
+        return businessProfileRepository.findByUserId(userId)
                 .map(profile -> parseShowcase(profile.getDescription()))
                 .orElse(new ArrayList<>());
     }

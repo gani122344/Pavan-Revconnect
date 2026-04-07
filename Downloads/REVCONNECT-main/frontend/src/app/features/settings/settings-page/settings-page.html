@@ -78,9 +78,11 @@
 
                                     <div class="form-group mb-3 max-w-sm" style="position: relative;">
                                         <label>Enter password to confirm deletion</label>
+                                        <input type="text" name="fake-username" style="display:none" autocomplete="username">
                                         <div style="position: relative; display: flex; align-items: center;">
                                             <input [type]="showDeletePassword ? 'text' : 'password'" class="form-input"
-                                                [(ngModel)]="deletePassword" placeholder="Current password"
+                                                [(ngModel)]="deletePassword" placeholder="Enter your password"
+                                                autocomplete="new-password"
                                                 style="padding-right: 40px; width: 100%;">
                                             <i class="fa-solid" [class.fa-eye]="!showDeletePassword"
                                                 [class.fa-eye-slash]="showDeletePassword"
