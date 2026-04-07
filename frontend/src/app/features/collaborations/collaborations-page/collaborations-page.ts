@@ -76,14 +76,20 @@ export class CollaborationsPage implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.isLoading = true;
     this.userService.getMyProfile().subscribe({
       next: (res: any) => {
-        if (res.success && res.data) {
+        if (res?.success && res?.data) {
           this.currentUser = res.data;
           this.isBusiness = res.data.userType === 'BUSINESS';
           this.isCreator = res.data.userType === 'CREATOR';
           this.loadCollaborations();
+        } else {
+          this.isLoading = false;
         }
+      },
+      error: () => {
+        this.isLoading = false;
       }
     });
   }
@@ -94,7 +100,12 @@ export class CollaborationsPage implements OnInit {
     const status = this.activeTab === 'all' ? undefined : this.activeTab.toUpperCase();
     this.collabService.getMyCollaborations(status).subscribe({
       next: (res: any) => {
-        this.collaborations = res?.data?.content || res?.data || [];
+        try {
+          this.collaborations = res?.data?.content || res?.data || [];
+          if (!Array.isArray(this.collaborations)) this.collaborations = [];
+        } catch {
+          this.collaborations = [];
+        }
         this.isLoading = false;
       },
       error: () => {
