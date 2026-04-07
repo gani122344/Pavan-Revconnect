@@ -1,0 +1,22 @@
+[Unit]
+Description=RevConnect Spring Boot Backend API
+After=syslog.target network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user
+Environment="JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto"
+Environment="SPRING_PROFILES_ACTIVE=prod"
+Environment="DB_HOST=database-1.cr8qqc0gkgm0.ap-south-2.rds.amazonaws.com"
+Environment="DB_NAME=revconnect_db"
+Environment="DB_USERNAME=admin"
+Environment="DB_PASSWORD=Chgani123"
+Environment="JWT_SECRET=RevConnectSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong2024"
+ExecStart=/usr/lib/jvm/java-21-amazon-corretto/bin/java -Xmx512m -jar /home/ec2-user/revconnect-1.0.0.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
