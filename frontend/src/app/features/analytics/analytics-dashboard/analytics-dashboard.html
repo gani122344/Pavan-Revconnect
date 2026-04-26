@@ -19,7 +19,28 @@
                     <button [class.active]="activePeriod === 30" (click)="setPeriod(30)">Month</button>
                     <button [class.active]="activePeriod === 90" (click)="setPeriod(90)">Quarter</button>
                 </div>
+                <button class="ai-insights-btn" (click)="generateAiInsights()" [disabled]="isLoadingInsights">
+                    <i class="fa-solid" [class.fa-wand-magic-sparkles]="!isLoadingInsights"
+                        [class.fa-circle-notch]="isLoadingInsights" [class.fa-spin]="isLoadingInsights"></i>
+                    {{ isLoadingInsights ? 'Analyzing...' : 'AI Insights' }}
+                </button>
             </header>
+
+            <!-- AI Insights Panel -->
+            <div class="ai-insights-card glass-card" *ngIf="showAiInsights">
+                <div class="ai-insights-header">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>AI-Powered Insights</span>
+                    <button class="ai-close" (click)="showAiInsights = false"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="ai-insights-body" *ngIf="!isLoadingInsights">
+                    <div [innerHTML]="aiInsights.replace('\n', '<br>')"></div>
+                </div>
+                <div class="ai-insights-body" *ngIf="isLoadingInsights" style="text-align:center; padding: 2rem;">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.5rem; color: #8b5cf6;"></i>
+                    <p style="margin-top: 0.5rem; color: var(--text-secondary);">Analyzing your data with AI...</p>
+                </div>
+            </div>
 
             <!-- Overview Stats Grid -->
             <section class="overview-grid" *ngIf="overview">

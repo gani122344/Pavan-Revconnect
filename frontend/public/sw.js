@@ -1,6 +1,5 @@
-const CACHE_NAME = 'revconnect-v2';
+const CACHE_NAME = 'revconnect-v4';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.webmanifest',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
@@ -164,6 +163,15 @@ self.addEventListener('fetch', event => {
 
   // Skip non-GET and API/WebSocket requests
   if (event.request.method !== 'GET' || url.pathname.startsWith('/api') || url.pathname.startsWith('/ws')) {
+    return;
+  }
+
+  // Never cache HTML navigations or app bundles. This prevents stale JS/CSS after deployments.
+  // (Push notifications still work; we only reduce caching aggressiveness.)
+  const isNavigation = event.request.mode === 'navigate' || event.request.destination === 'document';
+  const isBundle = url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.html');
+  if (isNavigation || isBundle) {
+    event.respondWith(fetch(event.request));
     return;
   }
 

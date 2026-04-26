@@ -11,6 +11,7 @@ import { LinkifyPipe } from '../../../shared/pipes/linkify-pipe';
 import { CallService, CallState } from '../../../core/services/call.service';
 import { Subscription } from 'rxjs';
 import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
+import { AiService } from '../../../core/services/ai.service';
 
 /**
  * HOW MESSAGES WORK (connected to backend MessageController):
@@ -109,6 +110,14 @@ export class MessagesPage implements OnInit, OnDestroy {
     private pipOrigY = 0;
     private pipMoved = false;
 
+    // AI Smart Replies
+    smartReplies: string[] = [];
+    isLoadingSmartReplies = false;
+    showAiChat = false;
+    aiChatInput = '';
+    aiChatMessages: { role: string; content: string }[] = [];
+    isAiTyping = false;
+
     constructor(
         private messageService: MessageService,
         private userService: UserService,
@@ -116,7 +125,8 @@ export class MessagesPage implements OnInit, OnDestroy {
         public callService: CallService,
         private route: ActivatedRoute,
         public router: Router,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private aiService: AiService
     ) { }
 
     @HostListener('document:click')
@@ -1070,4 +1080,74 @@ export class MessagesPage implements OnInit, OnDestroy {
         }, instant ? 100 : 50);
     }
 
+    // ══════════════ AI Smart Replies ══════════════
+    loadSmartReplies() {
+        if (!this.messages.length) return;
+        const lastMsg = this.messages[this.messages.length - 1];
+        if (lastMsg.senderId === this.currentUserId) {
+            this.smartReplies = [];
+            return;
+        }
+        this.isLoadingSmartReplies = true;
+        this.aiService.getSmartReplies(lastMsg.content || '', 'social media DM chat').subscribe({
+            next: (res) => {
+                this.smartReplies = res.success && res.data ? res.data : [];
+                this.isLoadingSmartReplies = false;
+                this.cdr.detectChanges();
+            },
+            error: () => {
+                this.smartReplies = [];
+                this.isLoadingSmartReplies = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    useSmartReply(reply: string) {
+        this.newMessage = reply;
+        this.smartReplies = [];
+        this.cdr.detectChanges();
+    }
+
+    // ══════════════ AI Chat Assistant ══════════════
+    toggleAiChat() {
+        this.showAiChat = !this.showAiChat;
+        if (this.showAiChat && this.aiChatMessages.length === 0) {
+            this.aiChatMessages.push({
+                role: 'assistant',
+                content: 'Hi! I\'m RevConnect AI. Ask me for caption ideas, content tips, or anything else!'
+            });
+        }
+    }
+
+    sendAiChat() {
+        if (!this.aiChatInput.trim()) return;
+        const msg = this.aiChatInput.trim();
+        this.aiChatMessages.push({ role: 'user', content: msg });
+        this.aiChatInput = '';
+        this.isAiTyping = true;
+        this.cdr.detectChanges();
+
+        const history = this.aiChatMessages.filter(m => m.role !== 'assistant' || m.content !== this.aiChatMessages[0]?.content)
+            .slice(-10);
+
+        this.aiService.chat(msg, history).subscribe({
+            next: (res) => {
+                this.aiChatMessages.push({
+                    role: 'assistant',
+                    content: res.data?.reply || 'Sorry, I couldn\'t process that.'
+                });
+                this.isAiTyping = false;
+                this.cdr.detectChanges();
+            },
+            error: () => {
+                this.aiChatMessages.push({
+                    role: 'assistant',
+                    content: 'AI is currently unavailable. Please try again later.'
+                });
+                this.isAiTyping = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
 }

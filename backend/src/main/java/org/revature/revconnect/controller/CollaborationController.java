@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.revature.revconnect.dto.*;
 import org.revature.revconnect.dto.response.ApiResponse;
+import org.revature.revconnect.dto.response.PostResponse;
 import org.revature.revconnect.model.User;
 import org.revature.revconnect.service.AuthService;
 import org.revature.revconnect.service.CollaborationService;
@@ -82,6 +83,18 @@ public class CollaborationController {
         User currentUser = authService.getCurrentUser();
         CollaborationResponse response = collaborationService.getCollaboration(id, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    // ═══════ Get business posts for a collaboration (creator sees business reels) ═══════
+    @GetMapping("/{id}/business-posts")
+    @Operation(summary = "Get business posts for a collaboration so creator can share them")
+    public ResponseEntity<ApiResponse<Page<PostResponse>>> getBusinessPosts(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        User currentUser = authService.getCurrentUser();
+        org.springframework.data.domain.Page<PostResponse> posts = collaborationService.getBusinessPostsForCollab(id, currentUser.getId(), page, size);
+        return ResponseEntity.ok(ApiResponse.success(posts));
     }
 
     // ═══════ BUSINESS: Grant promotion on a post ═══════

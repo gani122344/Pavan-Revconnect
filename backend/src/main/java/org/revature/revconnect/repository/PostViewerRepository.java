@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PostViewerRepository extends JpaRepository<PostViewer, Long> {
     boolean existsByPostIdAndUserId(Long postId, Long userId);
+
+    void deleteByPostId(Long postId);
 }

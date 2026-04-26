@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -6,6 +6,7 @@ import { Navbar } from '../../../core/components/navbar/navbar';
 import { Sidebar } from '../../../core/components/sidebar/sidebar';
 import { CollaborationService, CollaborationResponse, PostPromotionResponse } from '../../../core/services/collaboration.service';
 import { UserService, UserResponse } from '../../../core/services/user.service';
+import { PostService, PostResponse } from '../../../core/services/post.service';
 
 @Component({
   selector: 'app-collaborations-page',
@@ -62,6 +63,8 @@ export class CollaborationsPage implements OnInit {
   grantCtaUrl = '';
   isGranting = false;
   activeCollaborators: CollaborationResponse[] = [];
+  myPosts: PostResponse[] = [];
+  isLoadingMyPosts = false;
 
   // Showcase items for active collaborations
   showcaseItems: Map<number, any[]> = new Map();
@@ -70,9 +73,16 @@ export class CollaborationsPage implements OnInit {
   // Creator: promote showcase item
   isPromoting = false;
 
+  // Business posts (reels) for active collabs
+  businessPosts: Map<number, PostResponse[]> = new Map();
+  businessPostsLoading: Set<number> = new Set();
+  sharingPostId: number | null = null;
+
   constructor(
     private collabService: CollaborationService,
-    private userService: UserService
+    private userService: UserService,
+    private postService: PostService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -97,6 +107,7 @@ export class CollaborationsPage implements OnInit {
   loadCollaborations() {
     this.isLoading = true;
     this.collaborations = [];
+    this.cdr.detectChanges();
     const status = this.activeTab === 'all' ? undefined : this.activeTab.toUpperCase();
     this.collabService.getMyCollaborations(status).subscribe({
       next: (res: any) => {
@@ -107,16 +118,19 @@ export class CollaborationsPage implements OnInit {
           this.collaborations = [];
         }
         this.isLoading = false;
-        // Auto-load showcase for active collabs
+        this.cdr.detectChanges();
+        // Auto-load showcase and business posts for active collabs
         this.collaborations.forEach(c => {
           if (c.status === 'ACTIVE' && this.isCreator) {
             this.loadShowcase(c.businessId, c.id);
+            this.loadBusinessPosts(c.id);
           }
         });
       },
       error: () => {
         this.collaborations = [];
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -292,6 +306,24 @@ export class CollaborationsPage implements OnInit {
     this.grantPostId = null;
     this.grantCtaLabel = 'Visit Website';
     this.grantCtaUrl = '';
+    this.loadMyPosts();
+  }
+
+  loadMyPosts() {
+    if (this.myPosts.length > 0) return;
+    this.isLoadingMyPosts = true;
+    this.postService.getMyPosts(0, 50).subscribe({
+      next: (res: any) => {
+        this.myPosts = res?.data?.content || res?.data || [];
+        if (!Array.isArray(this.myPosts)) this.myPosts = [];
+        this.isLoadingMyPosts = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.myPosts = [];
+        this.isLoadingMyPosts = false;
+      }
+    });
   }
 
   grantPromotion() {
@@ -313,6 +345,68 @@ export class CollaborationsPage implements OnInit {
         alert(err.error?.message || 'Failed to grant promotion');
       }
     });
+  }
+
+  // ═══ Load business posts for a collaboration ═══
+  loadBusinessPosts(collabId: number) {
+    if (this.businessPosts.has(collabId) || this.businessPostsLoading.has(collabId)) return;
+    this.businessPostsLoading.add(collabId);
+    this.collabService.getBusinessPosts(collabId, 0, 30).subscribe({
+      next: (res: any) => {
+        const data = res?.data;
+        const posts = data?.content || data || [];
+        this.businessPosts.set(collabId, Array.isArray(posts) ? posts : []);
+        this.businessPostsLoading.delete(collabId);
+      },
+      error: () => {
+        this.businessPosts.set(collabId, []);
+        this.businessPostsLoading.delete(collabId);
+      }
+    });
+  }
+
+  getBusinessPostsList(collabId: number): PostResponse[] {
+    return this.businessPosts.get(collabId) || [];
+  }
+
+  // ═══ Creator: Share as Paid Partnership ═══
+  shareAsPaidPartnership(post: PostResponse, collab: CollaborationResponse) {
+    const brandName = collab.contract?.brandName || collab.businessName;
+    const content = `${post.content || ''}\n[[PROMO|${brandName}]]`;
+    this.sharingPostId = post.id;
+    let postType: any = 'TEXT';
+    if (post.postType === 'VIDEO') postType = 'VIDEO';
+    else if (post.mediaUrls?.length) postType = 'IMAGE';
+    this.postService.createPost({
+      content: content,
+      postType: postType,
+      mediaUrls: post.mediaUrls || [],
+      isPromotional: true,
+      partnerName: brandName,
+      songTitle: post.songTitle,
+      songArtist: post.songArtist,
+      songUrl: post.songUrl
+    }).subscribe({
+      next: () => {
+        this.sharingPostId = null;
+        alert(`Shared as paid partnership with ${brandName}! Check your feed.`);
+      },
+      error: (err: any) => {
+        this.sharingPostId = null;
+        alert(err.error?.message || 'Failed to share post');
+      }
+    });
+  }
+
+  getPostThumbnail(post: PostResponse): string {
+    if (post.mediaUrls?.length) return post.mediaUrls[0];
+    return '';
+  }
+
+  truncateContent(content: string, max = 80): string {
+    if (!content) return '';
+    const clean = content.replace(/\[PROMOTIONAL\]/g, '').replace(/\[PARTNER:[^\]]*\]/g, '').replace(/\[CTA:[^\]]*\]/g, '').replace(/\[TAGS:[^\]]*\]/g, '').trim();
+    return clean.length > max ? clean.substring(0, max) + '...' : clean;
   }
 
   getStatusColor(status: string): string {

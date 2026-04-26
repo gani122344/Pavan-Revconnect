@@ -458,59 +458,64 @@
             <!-- Showcase Tab -->
             <div class="feed-stream" *ngIf="!isLoadingProfile && user && activeTab === 'showcase'">
                 <div class="glass-card showcase-management mb-4" *ngIf="isCurrentUser()">
-                    <h3>Manage Your {{ user.userType === 'CREATOR' ? 'Portfolio' : 'Showcase' }}</h3>
-                    <p class="text-secondary small mb-3">Add your products, services, or portfolio items here.</p>
-                    <div class="showcase-form grid-2-col">
-                        <div class="form-group">
-                            <label>Item Name</label>
-                            <input type="text" class="form-control" [(ngModel)]="newShowcaseItem.name"
-                                placeholder="e.g. Logo Design">
+                    <div class="showcase-mgmt-header">
+                        <i class="fa-solid" [ngClass]="user.userType === 'CREATOR' ? 'fa-briefcase' : 'fa-store'"></i>
+                        <div>
+                            <h3>{{ user.userType === 'CREATOR' ? 'Manage Your Portfolio' : 'Manage Your Showcase' }}</h3>
+                            <p>{{ user.userType === 'CREATOR' ? 'Add your skills, services, and creative work to attract brand deals.' : 'Add your products and services to attract creator partnerships.' }}</p>
                         </div>
-                        <div class="form-group">
-                            <label>Category/Type</label>
-                            <input type="text" class="form-control" [(ngModel)]="newShowcaseItem.type"
-                                placeholder="e.g. Graphic Design">
+                    </div>
+                    <div class="showcase-form-grid">
+                        <div class="showcase-form-field">
+                            <label><i class="fa-solid fa-tag"></i> {{ user.userType === 'CREATOR' ? 'Service / Skill' : 'Product Name' }}</label>
+                            <input type="text" [(ngModel)]="newShowcaseItem.name"
+                                [placeholder]="user.userType === 'CREATOR' ? 'e.g. Video Editing, Photography' : 'e.g. Organic Pickles, T-Shirts'">
                         </div>
-                        <div class="form-group">
-                            <label>Price/Rate</label>
-                            <input type="text" class="form-control" [(ngModel)]="newShowcaseItem.price"
-                                placeholder="e.g. $50/hr">
+                        <div class="showcase-form-field">
+                            <label><i class="fa-solid fa-layer-group"></i> Category</label>
+                            <input type="text" [(ngModel)]="newShowcaseItem.type"
+                                [placeholder]="user.userType === 'CREATOR' ? 'e.g. Content Creation, Design' : 'e.g. Food, Apparel'">
                         </div>
-                        <div class="form-group">
-                            <label>External Link</label>
-                            <input type="text" class="form-control" [(ngModel)]="newShowcaseItem.link"
+                        <div class="showcase-form-field">
+                            <label><i class="fa-solid fa-indian-rupee-sign"></i> {{ user.userType === 'CREATOR' ? 'Rate' : 'Price' }}</label>
+                            <input type="text" [(ngModel)]="newShowcaseItem.price"
+                                [placeholder]="user.userType === 'CREATOR' ? 'e.g. ₹5,000/reel' : 'e.g. ₹299'">
+                        </div>
+                        <div class="showcase-form-field">
+                            <label><i class="fa-solid fa-link"></i> Link</label>
+                            <input type="text" [(ngModel)]="newShowcaseItem.link"
                                 placeholder="https://...">
                         </div>
                     </div>
-                    <button class="btn-primary w-100 mt-3" (click)="addShowcaseItem()" [disabled]="isAddingShowcase">
+                    <button class="showcase-add-btn" (click)="addShowcaseItem()" [disabled]="isAddingShowcase">
                         <i class="fa-solid" [class.fa-plus]="!isAddingShowcase"
                             [class.fa-circle-notch]="isAddingShowcase" [class.fa-spin]="isAddingShowcase"></i>
-                        Add to {{ user.userType === 'CREATOR' ? 'Portfolio' : 'Showcase' }}
+                        {{ isAddingShowcase ? 'Adding...' : 'Add to ' + (user.userType === 'CREATOR' ? 'Portfolio' : 'Showcase') }}
                     </button>
                 </div>
 
                 <div *ngIf="isLoadingShowcase" class="glass-card text-center p-4">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading showcase...
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
                 </div>
 
-                <div *ngIf="!isLoadingShowcase && showcaseItems.length === 0" class="glass-card text-center p-4">
-                    <i class="fa-solid fa-shop fa-2x mb-2 opacity-50"></i>
-                    <p>No showcase items to display.</p>
+                <div *ngIf="!isLoadingShowcase && showcaseItems.length === 0" class="showcase-empty glass-card">
+                    <i class="fa-solid" [ngClass]="user.userType === 'CREATOR' ? 'fa-briefcase' : 'fa-store'"></i>
+                    <h4>{{ user.userType === 'CREATOR' ? 'No portfolio items yet' : 'No products in showcase yet' }}</h4>
+                    <p>{{ user.userType === 'CREATOR' ? 'Add your skills and services to showcase to businesses.' : 'Add your products so creators know what to promote.' }}</p>
                 </div>
 
                 <div class="showcase-grid" *ngIf="!isLoadingShowcase && showcaseItems.length > 0">
-                    <div class="showcase-item glass-card" *ngFor="let item of showcaseItems; let i = index">
-                        <div class="item-header">
-                            <span class="item-type">{{item.type}}</span>
-                            <button class="icon-btn text-danger" *ngIf="isCurrentUser()"
-                                (click)="removeShowcaseItem(i)">
-                                <i class="fa-solid fa-trash-can"></i>
+                    <div class="showcase-item" *ngFor="let item of showcaseItems; let i = index">
+                        <div class="showcase-item-top">
+                            <span class="showcase-item-badge" *ngIf="item.type">{{ item.type }}</span>
+                            <button class="showcase-item-delete" *ngIf="isCurrentUser()" (click)="removeShowcaseItem(i)" title="Remove">
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
-                        <h4 class="item-name">{{item.name}}</h4>
-                        <div class="item-price">{{item.price}}</div>
-                        <a *ngIf="item.link" [href]="item.link" target="_blank" class="btn-secondary btn-sm w-100 mt-2">
-                            View Details <i class="fa-solid fa-external-link small ml-1"></i>
+                        <h4 class="showcase-item-name">{{ item.name }}</h4>
+                        <div class="showcase-item-price" *ngIf="item.price">{{ item.price }}</div>
+                        <a *ngIf="item.link" [href]="item.link" target="_blank" class="showcase-item-link">
+                            <i class="fa-solid fa-external-link-alt"></i> View
                         </a>
                     </div>
                 </div>
@@ -529,7 +534,7 @@
                 </div>
                 <div class="widget-content">
                     <div class="endorsement-list" *ngIf="activePartners.length > 0">
-                        <a *ngFor="let partner of activePartners" [routerLink]="['/profile', partner.username]"
+                        <a *ngFor="let partner of activePartners" [routerLink]="['/profile', partner.id]"
                             class="endorsement-item">
                             <img [src]="partner.pic || 'https://ui-avatars.com/api/?name=' + partner.name + '&background=random&size=64'" 
                                 class="partner-avatar" alt="">
@@ -629,6 +634,25 @@
                     <label>Bio</label>
                     <textarea class="form-control" [(ngModel)]="editData.bio" rows="3"
                         placeholder="Tell us about yourself"></textarea>
+                    <button type="button" class="ai-bio-toggle" (click)="showAiBioGenerator = !showAiBioGenerator">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        {{ showAiBioGenerator ? 'Hide AI Generator' : 'Generate with AI' }}
+                    </button>
+                    <div class="ai-bio-panel" *ngIf="showAiBioGenerator">
+                        <input type="text" class="form-control" [(ngModel)]="aiBioInterests"
+                            placeholder="Your interests (e.g. photography, travel, coding...)">
+                        <button type="button" class="ai-bio-gen-btn" (click)="generateAiBio()" [disabled]="isGeneratingBio">
+                            <i class="fa-solid" [class.fa-wand-magic-sparkles]="!isGeneratingBio"
+                                [class.fa-circle-notch]="isGeneratingBio" [class.fa-spin]="isGeneratingBio"></i>
+                            {{ isGeneratingBio ? 'Generating...' : 'Generate Bios' }}
+                        </button>
+                        <div class="ai-bio-suggestions" *ngIf="aiBioSuggestions.length > 0">
+                            <div class="ai-bio-option" *ngFor="let bio of aiBioSuggestions" (click)="useAiBio(bio)">
+                                <span>{{ bio }}</span>
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">

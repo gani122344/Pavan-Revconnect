@@ -304,6 +304,42 @@ public class CollaborationService {
         return toCollaborationResponse(collab, contract);
     }
 
+    // ═══════ Get business posts for a collaboration ═══════
+    public Page<org.revature.revconnect.dto.response.PostResponse> getBusinessPostsForCollab(Long collaborationId, Long currentUserId, int page, int size) {
+        Collaboration collab = collaborationRepo.findById(collaborationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Collaboration not found"));
+
+        // Only the creator in this collab can see business posts via this endpoint
+        if (!collab.getCreator().getId().equals(currentUserId) && !collab.getBusiness().getId().equals(currentUserId)) {
+            throw new IllegalStateException("You are not part of this collaboration");
+        }
+        if (collab.getStatus() != CollaborationStatus.ACTIVE) {
+            throw new IllegalStateException("Collaboration is not active");
+        }
+
+        Long businessUserId = collab.getBusiness().getId();
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Post> posts = postRepo.findByUserIdOrderByCreatedAtDesc(businessUserId, pageable);
+
+        return posts.map(post -> {
+            org.revature.revconnect.dto.response.PostResponse resp = new org.revature.revconnect.dto.response.PostResponse();
+            resp.setId(post.getId());
+            resp.setContent(post.getContent());
+            resp.setPostType(post.getPostType() != null ? post.getPostType() : org.revature.revconnect.enums.PostType.TEXT);
+            resp.setMediaUrls(post.getMediaUrls());
+            resp.setLikeCount(post.getLikeCount());
+            resp.setCommentCount(post.getCommentCount());
+            resp.setShareCount(post.getShareCount());
+            resp.setCreatedAt(post.getCreatedAt());
+            resp.setUpdatedAt(post.getUpdatedAt());
+            resp.setAuthorId(post.getUser().getId());
+            resp.setAuthorUsername(post.getUser().getUsername());
+            resp.setAuthorName(post.getUser().getName());
+            resp.setAuthorProfilePicture(post.getUser().getProfilePicture());
+            return resp;
+        });
+    }
+
     // ═══════ Get promotions for a post ═══════
     public List<PostPromotionResponse> getPostPromotions(Long postId) {
         return promotionRepo.findByPostIdAndStatus(postId, PromotionStatus.APPROVED)

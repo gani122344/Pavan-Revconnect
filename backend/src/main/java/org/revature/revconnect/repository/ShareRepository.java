@@ -13,4 +13,6 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
     boolean existsByUserIdAndPostId(Long userId, Long postId);
 
     long countByPostId(Long postId);
+
+    void deleteByPostId(Long postId);
 }

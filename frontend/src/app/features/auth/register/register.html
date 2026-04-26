@@ -1,4 +1,37 @@
 <div class="auth-container">
+    <!-- Network Graph SVG Background -->
+    <svg class="auth-bg-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <radialGradient id="ng1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(139,92,246,0.2)"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+            <radialGradient id="ng2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(236,72,153,0.2)"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+            <radialGradient id="ng3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(6,182,212,0.2)"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+        </defs>
+        <line x1="120" y1="100" x2="300" y2="200" stroke="rgba(139,92,246,0.12)" stroke-width="1" stroke-dasharray="6 4" class="conn-line"/>
+        <line x1="300" y1="200" x2="500" y2="120" stroke="rgba(236,72,153,0.1)" stroke-width="1" stroke-dasharray="6 4" class="conn-line"/>
+        <line x1="300" y1="200" x2="250" y2="400" stroke="rgba(6,182,212,0.1)" stroke-width="1" stroke-dasharray="6 4" class="conn-line"/>
+        <line x1="500" y1="120" x2="680" y2="250" stroke="rgba(139,92,246,0.08)" stroke-width="1" stroke-dasharray="6 4" class="conn-line"/>
+        <line x1="680" y1="250" x2="600" y2="450" stroke="rgba(236,72,153,0.08)" stroke-width="1" stroke-dasharray="6 4" class="conn-line"/>
+        <line x1="250" y1="400" x2="600" y2="450" stroke="rgba(6,182,212,0.06)" stroke-width="1" stroke-dasharray="6 4" class="conn-line"/>
+        <line x1="120" y1="100" x2="80" y2="350" stroke="rgba(139,92,246,0.06)" stroke-width="1" stroke-dasharray="6 4" class="conn-line"/>
+        <circle cx="120" cy="100" r="30" fill="url(#ng1)" class="node n1"/>
+        <circle cx="120" cy="100" r="6" fill="rgba(139,92,246,0.4)" class="node-core"/>
+        <circle cx="300" cy="200" r="38" fill="url(#ng2)" class="node n2"/>
+        <circle cx="300" cy="200" r="8" fill="rgba(236,72,153,0.4)" class="node-core"/>
+        <circle cx="500" cy="120" r="32" fill="url(#ng3)" class="node n3"/>
+        <circle cx="500" cy="120" r="7" fill="rgba(6,182,212,0.4)" class="node-core"/>
+        <circle cx="680" cy="250" r="26" fill="url(#ng1)" class="node n4"/>
+        <circle cx="680" cy="250" r="5" fill="rgba(139,92,246,0.35)" class="node-core"/>
+        <circle cx="250" cy="400" r="34" fill="url(#ng3)" class="node n5"/>
+        <circle cx="250" cy="400" r="7" fill="rgba(6,182,212,0.35)" class="node-core"/>
+        <circle cx="600" cy="450" r="24" fill="url(#ng2)" class="node n6"/>
+        <circle cx="600" cy="450" r="5" fill="rgba(236,72,153,0.3)" class="node-core"/>
+        <circle cx="80" cy="350" r="20" fill="url(#ng1)" class="node n7"/>
+        <circle cx="300" cy="200" r="24" fill="none" stroke="rgba(236,72,153,0.12)" stroke-width="1" class="pulse"/>
+        <circle cx="500" cy="120" r="20" fill="none" stroke="rgba(6,182,212,0.1)" stroke-width="1" class="pulse p2"/>
+        <circle r="2" fill="rgba(139,92,246,0.6)"><animateMotion dur="4s" repeatCount="indefinite" path="M120,100 L300,200 L500,120"/></circle>
+        <circle r="2" fill="rgba(236,72,153,0.5)"><animateMotion dur="5s" repeatCount="indefinite" path="M500,120 L680,250 L600,450"/></circle>
+        <circle r="1.5" fill="rgba(6,182,212,0.5)"><animateMotion dur="6s" repeatCount="indefinite" path="M250,400 L300,200 L120,100 L80,350"/></circle>
+    </svg>
     <div class="auth-card glass-card">
         <div class="auth-header">
             <div class="logo-circle">

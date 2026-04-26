@@ -18,6 +18,7 @@ import { ConnectionService } from '../../../core/services/connection.service';
 import { MessageService } from '../../../core/services/message.service';
 import { SONG_LIBRARY, SONG_GENRES, Song } from '../../../shared/data/songs.data';
 import { AudioPlayerService } from '../../../core/services/audio-player.service';
+import { AiService } from '../../../core/services/ai.service';
 import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
 
 @Component({
@@ -177,6 +178,14 @@ export class FeedPage implements OnInit, AfterViewInit, OnDestroy {
   isSendingShare = false;
   shareSuccessMap: { [userId: number]: boolean } = {};
 
+  // AI Features
+  isGeneratingCaption = false;
+  aiCaptionContext = '';
+  aiCaptionMood = 'casual';
+  showAiCaptionPanel = false;
+  aiSuggestedHashtags: string[] = [];
+  isLoadingHashtags = false;
+
   constructor(
     private postService: PostService,
     private interactionService: InteractionService,
@@ -188,6 +197,7 @@ export class FeedPage implements OnInit, AfterViewInit, OnDestroy {
     private connectionService: ConnectionService,
     private messageService: MessageService,
     public audioPlayer: AudioPlayerService,
+    private aiService: AiService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -334,6 +344,9 @@ export class FeedPage implements OnInit, AfterViewInit, OnDestroy {
             this.posts = this.posts.filter(p => p.id !== postId);
             this.cdr.markForCheck();
           }
+        },
+        error: (err) => {
+          alert(err.error?.message || 'Failed to delete post');
         }
       });
     }
@@ -1022,6 +1035,60 @@ export class FeedPage implements OnInit, AfterViewInit, OnDestroy {
 
   getRelativeTime(value: any): string {
     return sharedGetRelativeTime(value);
+  }
+
+  // ══════════════ AI Features ══════════════
+  toggleAiCaptionPanel() {
+    this.showAiCaptionPanel = !this.showAiCaptionPanel;
+  }
+
+  generateAiCaption() {
+    const context = this.aiCaptionContext || this.newPostContent || 'social media post';
+    if (!context.trim()) return;
+    this.isGeneratingCaption = true;
+    this.aiService.generateCaption(context, this.aiCaptionMood).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.newPostContent = res.data.caption || '';
+          if (res.data.hashtags?.length) {
+            this.newPostContent += '\n\n' + res.data.hashtags.map((h: string) => '#' + h).join(' ');
+          }
+          this.aiSuggestedHashtags = res.data.hashtags || [];
+        }
+        this.isGeneratingCaption = false;
+        this.showAiCaptionPanel = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isGeneratingCaption = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  suggestAiHashtags() {
+    if (!this.newPostContent.trim()) return;
+    this.isLoadingHashtags = true;
+    this.aiService.suggestHashtags(this.newPostContent, 5).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.aiSuggestedHashtags = res.data;
+        }
+        this.isLoadingHashtags = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isLoadingHashtags = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  addAiHashtag(tag: string) {
+    if (!this.newPostContent.includes('#' + tag)) {
+      this.newPostContent += (this.newPostContent ? ' ' : '') + '#' + tag;
+      this.cdr.markForCheck();
+    }
   }
 }
 

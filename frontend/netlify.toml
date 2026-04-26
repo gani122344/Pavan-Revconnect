@@ -1,0 +1,8 @@
+[build]
+  command = "npx ng build --configuration=production"
+  publish = "dist/revconnect-ui/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

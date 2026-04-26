@@ -1,5 +1,6 @@
 package org.revature.revconnect.model;
 
+import org.revature.revconnect.enums.AuthProvider;
 import org.revature.revconnect.enums.Privacy;
 import org.revature.revconnect.enums.UserType;
 import jakarta.persistence.*;
@@ -19,7 +20,8 @@ import java.util.List;
         @Index(name = "idx_username", columnList = "username"),
         @Index(name = "idx_email", columnList = "email"),
         @Index(name = "idx_user_type", columnList = "user_type"),
-        @Index(name = "idx_created_at", columnList = "created_at")
+        @Index(name = "idx_created_at", columnList = "created_at"),
+        @Index(name = "idx_phone", columnList = "phone")
 })
 @Getter
 @Setter
@@ -35,11 +37,23 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(unique = true, length = 100)
     private String email;
 
-    @Column(nullable = false)
+    @Column
     private String password;
+
+    @Column(unique = true, length = 20)
+    private String phone;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false)
+    @Builder.Default
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    @Column(name = "is_phone_verified")
+    @Builder.Default
+    private Boolean isPhoneVerified = false;
 
     @Column(nullable = false, length = 100)
     private String name;

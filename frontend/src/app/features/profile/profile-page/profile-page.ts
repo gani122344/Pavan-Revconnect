@@ -19,6 +19,7 @@ import { CollaborationService } from '../../../core/services/collaboration.servi
 import { SONG_LIBRARY, Song } from '../../../shared/data/songs.data';
 import { BottomNav } from '../../../core/components/bottom-nav/bottom-nav';
 import { getRelativeTime as sharedGetRelativeTime } from '../../../shared/utils/time.utils';
+import { AiService } from '../../../core/services/ai.service';
 
 @Component({
     selector: 'app-profile-page',
@@ -80,7 +81,7 @@ export class ProfilePage implements OnInit {
     isLoadingPastRequests = false;
 
     endorsementLinks: { title: string, url: string }[] = [];
-    activePartners: { name: string, username: string, pic: string }[] = [];
+    activePartners: { id: number, name: string, username: string, pic: string }[] = [];
 
     isUploadingProfilePic = false;
     isUploadingCoverPhoto = false;
@@ -99,6 +100,12 @@ export class ProfilePage implements OnInit {
     followingUsers: any[] = [];
     shareSuccessMap: { [userId: number]: boolean } = {};
 
+    // AI Bio Generator
+    showAiBioGenerator = false;
+    aiBioSuggestions: string[] = [];
+    isGeneratingBio = false;
+    aiBioInterests = '';
+
     constructor(
         private userService: UserService,
         private postService: PostService,
@@ -112,7 +119,8 @@ export class ProfilePage implements OnInit {
         private http: HttpClient,
         private cdr: ChangeDetectorRef,
         private audioPlayer: AudioPlayerService,
-        private collabService: CollaborationService
+        private collabService: CollaborationService,
+        private aiService: AiService
     ) { }
 
     allSongs = SONG_LIBRARY;
@@ -1231,6 +1239,7 @@ export class ProfilePage implements OnInit {
                 if (!Array.isArray(collabs)) { this.activePartners = []; return; }
                 const isBiz = this.user?.userType === 'BUSINESS';
                 this.activePartners = collabs.map((c: any) => ({
+                    id: isBiz ? c.creatorId : c.businessId,
                     name: isBiz ? c.creatorName : c.businessName,
                     username: isBiz ? c.creatorUsername : c.businessUsername,
                     pic: isBiz ? c.creatorPic : c.businessPic
@@ -1345,5 +1354,36 @@ export class ProfilePage implements OnInit {
             },
             error: (err) => console.error('Failed to remove showcase item', err)
         });
+    }
+
+    // ══════════════ AI Bio Generator ══════════════
+    generateAiBio() {
+        if (!this.user) return;
+        this.isGeneratingBio = true;
+        this.aiService.generateBio(
+            this.user.name || 'User',
+            this.user.userType || 'PERSONAL',
+            this.user.category || '',
+            this.aiBioInterests
+        ).subscribe({
+            next: (res) => {
+                if (res.success && res.data) {
+                    this.aiBioSuggestions = res.data;
+                }
+                this.isGeneratingBio = false;
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.aiBioSuggestions = [];
+                this.isGeneratingBio = false;
+                this.cdr.markForCheck();
+            }
+        });
+    }
+
+    useAiBio(bio: string) {
+        this.editData.bio = bio;
+        this.showAiBioGenerator = false;
+        this.cdr.markForCheck();
     }
 }

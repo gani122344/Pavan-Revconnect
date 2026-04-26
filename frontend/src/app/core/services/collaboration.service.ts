@@ -163,6 +163,11 @@ export class CollaborationService {
     return this.http.get<ApiResponse<PostPromotionResponse>>(`${this.api}/promotions/label?postId=${postId}&creatorId=${creatorId}`);
   }
 
+  // Get business posts for a collaboration (creator sees business reels)
+  getBusinessPosts(collaborationId: number, page = 0, size = 20): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.api}/${collaborationId}/business-posts?page=${page}&size=${size}`);
+  }
+
   // Download contract PDF
   downloadContractPdf(collaborationId: number): void {
     this.http.get(`${this.api}/${collaborationId}/contract/pdf`, { responseType: 'blob' }).subscribe({

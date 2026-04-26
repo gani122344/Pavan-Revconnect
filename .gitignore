@@ -21,3 +21,8 @@ Thumbs.db
 # Env
 .env
 *.pem
+
+# Unrelated folders (keep project clean)
+Java_Tasks/
+OneDrive/
+OneDrive_Projects/

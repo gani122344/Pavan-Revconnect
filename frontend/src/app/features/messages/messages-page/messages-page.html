@@ -81,6 +81,11 @@
                                 <button class="call-btn" (click)="startVideoCall()" title="Video Call">
                                     <i class="fa-solid fa-video"></i>
                                 </button>
+                                <button class="call-btn ai-chat-btn" (click)="loadSmartReplies()" title="AI Smart Replies"
+                                    [disabled]="isLoadingSmartReplies">
+                                    <i class="fa-solid" [class.fa-wand-magic-sparkles]="!isLoadingSmartReplies"
+                                        [class.fa-circle-notch]="isLoadingSmartReplies" [class.fa-spin]="isLoadingSmartReplies"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -274,6 +279,12 @@
                             <button class="recording-send-btn" (click)="stopAndSendRecording()">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </button>
+                        </div>
+
+                        <!-- AI Smart Replies -->
+                        <div class="smart-replies-row" *ngIf="smartReplies.length > 0">
+                            <button class="smart-reply-chip" *ngFor="let reply of smartReplies"
+                                (click)="useSmartReply(reply)">{{ reply }}</button>
                         </div>
 
                         <!-- Message Input -->

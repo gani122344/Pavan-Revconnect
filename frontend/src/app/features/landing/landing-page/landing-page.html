@@ -1,6 +1,9 @@
 <div class="landing-wrapper">
+    <!-- Scroll Progress Bar -->
+    <div class="scroll-progress"></div>
+
     <!-- Premium Glass Navbar -->
-    <nav class="landing-nav glass-nav">
+    <nav class="landing-nav glass-nav" [class.nav-scrolled]="navScrolled">
         <div class="nav-container">
             <div class="brand">
                 <div class="logo-morph">
@@ -30,10 +33,17 @@
             <div class="grid-overlay"></div>
         </div>
 
+        <!-- Large background text for depth -->
+        <div class="hero-bg-text" aria-hidden="true">CONNECT</div>
+
+        <!-- 3D Canvas -->
+        <canvas id="hero-canvas"></canvas>
+
+        <!-- Hero Content overlaid on canvas -->
         <div class="hero-content">
             <div class="hero-badge">
                 <i class="fa-solid fa-sparkles"></i>
-                Now Available on All Devices
+                AI-Powered Professional Network
             </div>
             <h1 class="hero-title">
                 Your Professional <span class="gradient-text">Network</span>,<br>
@@ -51,8 +61,6 @@
                     <i class="fa-solid fa-download"></i> Install App
                 </button>
             </div>
-
-            <!-- Floating trust badges -->
             <div class="trust-row">
                 <div class="trust-item">
                     <i class="fa-solid fa-shield-halved"></i> Secure & Private
@@ -64,64 +72,12 @@
                     <i class="fa-solid fa-globe"></i> Works Everywhere
                 </div>
             </div>
-
-            <!-- Hero Interface Teaser -->
-            <div class="hero-preview glass-card">
-                <div class="preview-header">
-                    <div class="dots"><span></span><span></span><span></span></div>
-                    <div class="search-bar"><i class="fa-solid fa-magnifying-glass"></i> Search professionals...</div>
-                </div>
-                <div class="preview-body">
-                    <div class="mock-sidebar">
-                        <div class="sidebar-user active">
-                            <div class="mock-avatar-sm"></div>
-                            <div class="sidebar-text">My Network</div>
-                        </div>
-                        <div class="sidebar-user">
-                            <i class="fa-solid fa-compass"></i>
-                            <div class="sidebar-text">Explore</div>
-                        </div>
-                        <div class="sidebar-user">
-                            <i class="fa-solid fa-bookmark"></i>
-                            <div class="sidebar-text">Saved</div>
-                        </div>
-                        <div class="sidebar-user">
-                            <i class="fa-solid fa-chart-line"></i>
-                            <div class="sidebar-text">Analytics</div>
-                        </div>
-                    </div>
-                    <div class="mock-feed">
-                        <div class="mock-post">
-                            <div class="post-top">
-                                <div class="mock-avatar-md"></div>
-                                <div class="post-meta-wrap">
-                                    <div class="post-user-name">Sarah Jenkins</div>
-                                    <div class="post-user-handle">&#64;sarah_creative</div>
-                                </div>
-                            </div>
-                            <div class="post-desc">Just launched our new brand identity for &#64;NextGen. Thoughts? 🚀</div>
-                            <div class="post-img-placeholder"></div>
-                            <div class="post-actions-mock">
-                                <span><i class="fa-regular fa-heart"></i> 128</span>
-                                <span><i class="fa-regular fa-comment"></i> 34</span>
-                                <span><i class="fa-solid fa-share"></i> 12</span>
-                            </div>
-                        </div>
-                        <div class="mock-post">
-                            <div class="post-top">
-                                <div class="mock-avatar-md cyan"></div>
-                                <div class="post-meta-wrap">
-                                    <div class="post-user-name">Alex Rivera</div>
-                                    <div class="post-user-handle">&#64;arivera_pro</div>
-                                </div>
-                            </div>
-                            <div class="post-desc">Looking for a Senior UX Designer to join our team. DM me!</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
+        <div class="hero-glow-line"></div>
     </header>
+
+    <!-- Section Separator -->
+    <div class="section-separator"></div>
 
     <!-- Stats Section -->
     <section class="stats-bar">
@@ -145,6 +101,9 @@
             <span class="stat-label">User Rating</span>
         </div>
     </section>
+
+    <!-- Section Separator -->
+    <div class="section-separator"></div>
 
     <!-- Download / Install Section -->
     <section id="download" class="download-section">
@@ -209,6 +168,9 @@
         </div>
     </section>
 
+    <!-- Section Separator -->
+    <div class="section-separator"></div>
+
     <!-- Features Section -->
     <section id="features" class="features">
         <div class="section-header">
@@ -263,6 +225,9 @@
         </div>
     </section>
 
+    <!-- Section Separator -->
+    <div class="section-separator"></div>
+
     <!-- How It Works -->
     <section id="how-it-works" class="how-it-works">
         <div class="section-header">
@@ -294,6 +259,9 @@
             </div>
         </div>
     </section>
+
+    <!-- Section Separator -->
+    <div class="section-separator"></div>
 
     <!-- Testimonials -->
     <section class="testimonials">
@@ -351,6 +319,9 @@
             </div>
         </div>
     </section>
+
+    <!-- Section Separator -->
+    <div class="section-separator"></div>
 
     <!-- CTA Section -->
     <section class="final-cta">

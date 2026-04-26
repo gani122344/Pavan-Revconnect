@@ -373,6 +373,7 @@ export class StoriesFeed implements OnInit, OnDestroy {
   }
 
   resumeStory() {
+    if (this.showViewersPanel) return;
     this.storyPaused = false;
   }
 

@@ -24,6 +24,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Boolean existsByEmail(String email);
 
+    Optional<User> findByPhone(String phone);
+
+    Boolean existsByPhone(String phone);
+
     @Query("SELECT u FROM User u WHERE (u.isActive = true OR u.isActive IS NULL) AND u.isVerified = true AND " +
             "(LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(u.name) LIKE LOWER(CONCAT('%', :query, '%')))")

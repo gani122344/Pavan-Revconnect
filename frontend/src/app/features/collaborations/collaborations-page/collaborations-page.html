@@ -117,6 +117,57 @@
                             </div>
                         </div>
 
+                        <!-- ═══ Business Reels & Posts to Promote (Creator sees after acceptance) ═══ -->
+                        <div class="business-reels-section" *ngIf="collab.status === 'ACTIVE' && isCreator">
+                            <div class="reels-section-header">
+                                <div class="reels-title-row">
+                                    <i class="fa-solid fa-clapperboard reels-icon"></i>
+                                    <div>
+                                        <h4>Reels &amp; Posts to Promote</h4>
+                                        <span class="reels-hint">Share these as <strong>Paid Partnership with {{ collab.contract?.brandName || collab.businessName }}</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div *ngIf="businessPostsLoading.has(collab.id)" class="reels-loading">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading posts...
+                            </div>
+
+                            <div class="reels-grid" *ngIf="getBusinessPostsList(collab.id).length > 0">
+                                <div class="reel-card" *ngFor="let post of getBusinessPostsList(collab.id)">
+                                    <div class="reel-thumb" *ngIf="getPostThumbnail(post)">
+                                        <img [src]="getPostThumbnail(post)" alt="Post media">
+                                        <div class="reel-play-icon" *ngIf="post.postType === 'VIDEO'">
+                                            <i class="fa-solid fa-play"></i>
+                                        </div>
+                                    </div>
+                                    <div class="reel-thumb reel-thumb-text" *ngIf="!getPostThumbnail(post)">
+                                        <i class="fa-solid fa-align-left"></i>
+                                    </div>
+                                    <div class="reel-info">
+                                        <p class="reel-content">{{ truncateContent(post.content) }}</p>
+                                        <div class="reel-stats">
+                                            <span><i class="fa-solid fa-heart"></i> {{ post.likeCount || 0 }}</span>
+                                            <span><i class="fa-solid fa-comment"></i> {{ post.commentCount || 0 }}</span>
+                                            <span><i class="fa-solid fa-share"></i> {{ post.shareCount || 0 }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="reel-actions">
+                                        <button class="reel-share-btn" (click)="shareAsPaidPartnership(post, collab)" [disabled]="sharingPostId === post.id">
+                                            <i class="fa-solid fa-circle-notch fa-spin" *ngIf="sharingPostId === post.id"></i>
+                                            <i class="fa-solid fa-share-nodes" *ngIf="sharingPostId !== post.id"></i>
+                                            <span>{{ sharingPostId === post.id ? 'Sharing...' : 'Share as Paid Partnership' }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="reels-empty" *ngIf="businessPosts.has(collab.id) && getBusinessPostsList(collab.id).length === 0 && !businessPostsLoading.has(collab.id)">
+                                <i class="fa-solid fa-film"></i>
+                                <span>{{ collab.businessName }} hasn't posted any content yet</span>
+                            </div>
+                        </div>
+
                         <!-- ═══ Creator's Reach (Business sees creator stats) ═══ -->
                         <div class="creator-reach" *ngIf="collab.status === 'ACTIVE' && isBusiness">
                             <div class="catalog-header">
@@ -412,9 +463,21 @@
             <button class="modal-close" (click)="showGrantModal = false"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
-            <label class="form-label">Post ID</label>
-            <input type="number" [(ngModel)]="grantPostId" placeholder="Enter post ID">
-            <label class="form-label">CTA Button</label>
+            <label class="form-label">Select Post</label>
+            <div *ngIf="isLoadingMyPosts" style="padding: 0.5rem 0; color: var(--text-muted); font-size: 0.85rem;">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading your posts...
+            </div>
+            <select [(ngModel)]="grantPostId" *ngIf="!isLoadingMyPosts" style="width:100%">
+                <option [ngValue]="null" disabled>-- Choose a post to promote --</option>
+                <option *ngFor="let p of myPosts" [ngValue]="p.id">
+                    {{ (p.content || 'No caption').substring(0, 60) }}{{ (p.content || '').length > 60 ? '...' : '' }}
+                    {{ p.mediaUrls?.length ? '📷' : '' }}
+                </option>
+            </select>
+            <div *ngIf="!isLoadingMyPosts && myPosts.length === 0" style="padding: 0.5rem 0; color: var(--text-muted); font-size: 0.85rem;">
+                No posts found. Create a post first.
+            </div>
+            <label class="form-label" style="margin-top: 1rem;">CTA Button</label>
             <select [(ngModel)]="grantCtaLabel">
                 <option value="Visit Website">Visit Website</option>
                 <option value="Shop Now">Shop Now</option>

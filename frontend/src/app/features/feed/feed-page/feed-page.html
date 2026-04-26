@@ -42,6 +42,10 @@
                             <span *ngIf="!selectedSong">Song</span>
                             <span *ngIf="selectedSong">{{ selectedSong.title }}</span>
                         </button>
+                        <button class="icon-btn ai-btn" [class.active]="showAiCaptionPanel"
+                            (click)="toggleAiCaptionPanel()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> AI
+                        </button>
                     </div>
                     <button class="btn-primary" (click)="createPost()"
                         [disabled]="(!newPostContent.trim() && !selectedMediaFile) || isUploadingMedia">
@@ -202,6 +206,43 @@
                         <div *ngIf="filteredSongs.length === 0" class="no-songs-found">
                             <i class="fa-regular fa-face-sad-tear"></i>
                             <p>No songs found</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Caption Generator Panel -->
+                <div class="ai-panel" *ngIf="showAiCaptionPanel">
+                    <div class="ai-panel-header">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>AI Caption Generator</span>
+                    </div>
+                    <div class="ai-panel-body">
+                        <input type="text" [(ngModel)]="aiCaptionContext"
+                            placeholder="Describe your post (e.g. sunset at beach, new product launch...)"
+                            class="ai-input">
+                        <div class="ai-mood-row">
+                            <span class="ai-mood-label">Mood:</span>
+                            <button *ngFor="let m of ['casual','funny','professional','inspiring','bold']"
+                                class="ai-mood-chip" [class.active]="aiCaptionMood === m"
+                                (click)="aiCaptionMood = m">{{ m }}</button>
+                        </div>
+                        <div class="ai-actions-row">
+                            <button class="ai-generate-btn" (click)="generateAiCaption()" [disabled]="isGeneratingCaption">
+                                <i class="fa-solid" [class.fa-wand-magic-sparkles]="!isGeneratingCaption"
+                                    [class.fa-circle-notch]="isGeneratingCaption" [class.fa-spin]="isGeneratingCaption"></i>
+                                {{ isGeneratingCaption ? 'Generating...' : 'Generate Caption' }}
+                            </button>
+                            <button class="ai-hashtag-btn" (click)="suggestAiHashtags()"
+                                [disabled]="isLoadingHashtags || !newPostContent.trim()">
+                                <i class="fa-solid" [class.fa-hashtag]="!isLoadingHashtags"
+                                    [class.fa-circle-notch]="isLoadingHashtags" [class.fa-spin]="isLoadingHashtags"></i>
+                                Suggest Hashtags
+                            </button>
+                        </div>
+                        <div class="ai-hashtag-suggestions" *ngIf="aiSuggestedHashtags.length > 0">
+                            <span class="ai-hashtag-label">Tap to add:</span>
+                            <button *ngFor="let tag of aiSuggestedHashtags" class="ai-tag-chip"
+                                (click)="addAiHashtag(tag)">#{{ tag }}</button>
                         </div>
                     </div>
                 </div>

@@ -29,8 +29,11 @@
     "@angular/forms": "^21.1.0",
     "@angular/platform-browser": "^21.1.0",
     "@angular/router": "^21.1.0",
+    "@types/three": "^0.183.1",
     "buffer": "^6.0.3",
+    "gsap": "^3.14.2",
     "rxjs": "~7.8.0",
+    "three": "^0.183.2",
     "tslib": "^2.3.0"
   },
   "devDependencies": {

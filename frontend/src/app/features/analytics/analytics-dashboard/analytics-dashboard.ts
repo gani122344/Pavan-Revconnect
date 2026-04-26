@@ -7,6 +7,7 @@ import { UserService, UserResponse } from '../../../core/services/user.service';
 import { RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { AiService } from '../../../core/services/ai.service';
 
 @Component({
   selector: 'app-analytics-dashboard',
@@ -158,7 +159,12 @@ export class AnalyticsDashboard implements OnInit, OnDestroy {
   expandedNewsIndex: number | null = null;
 
   isLoading = true;
-  activePeriod = 30; // 7, 30, 90 days
+  activePeriod = 30;
+
+  // AI Insights
+  aiInsights = '';
+  isLoadingInsights = false;
+  showAiInsights = false; // 7, 30, 90 days
   loginTime: Date = (() => {
     const stored = sessionStorage.getItem('revconnect_login_time');
     if (stored) return new Date(stored);
@@ -171,6 +177,7 @@ export class AnalyticsDashboard implements OnInit, OnDestroy {
   constructor(
     private analyticsService: AnalyticsService,
     private userService: UserService,
+    private aiService: AiService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -355,5 +362,33 @@ export class AnalyticsDashboard implements OnInit, OnDestroy {
     // Trim length if it's too long
     if (clean.length > 50) return clean.substring(0, 50) + '...';
     return clean;
+  }
+
+  // ══════════════ AI Insights ══════════════
+  generateAiInsights() {
+    this.isLoadingInsights = true;
+    this.showAiInsights = true;
+    const data: any = {
+      totalPosts: this.overview?.totalPosts || 0,
+      totalLikes: this.overview?.totalLikes || 0,
+      totalComments: this.overview?.totalComments || 0,
+      totalViews: this.overview?.totalViews || 0,
+      followers: this.followerGrowth?.length ? this.followerGrowth[this.followerGrowth.length - 1]?.followers : 0,
+      engagementRate: this.engagement?.engagementRate || 0,
+      topPostsCount: this.topPosts?.length || 0,
+      period: this.activePeriod + ' days'
+    };
+    this.aiService.getInsights(data).subscribe({
+      next: (res) => {
+        this.aiInsights = res.data?.insights || 'No insights available.';
+        this.isLoadingInsights = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.aiInsights = 'AI insights are currently unavailable. Please check your Ollama connection.';
+        this.isLoadingInsights = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }

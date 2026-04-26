@@ -26,4 +26,6 @@ public interface PostPromotionRepository extends JpaRepository<PostPromotion, Lo
     boolean existsByPostIdAndCreatorIdAndStatus(Long postId, Long creatorId, PromotionStatus status);
 
     List<PostPromotion> findByCollaborationId(Long collaborationId);
+
+    void deleteByPostId(Long postId);
 }

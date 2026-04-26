@@ -45,6 +45,29 @@ export interface AuthResponse {
     userType?: string;
 }
 
+export interface TempAuthResponse {
+    tempToken: string;
+    email: string;
+    name: string;
+    provider: string;
+    requiresPhone: boolean;
+}
+
+export interface SendOtpRequest {
+    phone: string;
+    tempToken?: string;
+}
+
+export interface VerifyOtpRequest {
+    phone: string;
+    otp: string;
+    tempToken?: string;
+}
+
+export interface GoogleAuthRequest {
+    idToken: string;
+}
+
 export interface ApiResponse<T> {
     success: boolean;
     message: string;
@@ -90,6 +113,18 @@ export class AuthService {
 
     resetPassword(request: ResetPasswordRequest): Observable<ApiResponse<void>> {
         return this.http.post<ApiResponse<void>>(`${this.apiUrl}/reset-password`, request);
+    }
+
+    googleAuth(request: GoogleAuthRequest): Observable<ApiResponse<TempAuthResponse>> {
+        return this.http.post<ApiResponse<TempAuthResponse>>(`${this.apiUrl}/google`, request);
+    }
+
+    sendOtp(request: SendOtpRequest): Observable<ApiResponse<void>> {
+        return this.http.post<ApiResponse<void>>(`${this.apiUrl}/send-otp`, request);
+    }
+
+    verifyOtp(request: VerifyOtpRequest): Observable<ApiResponse<AuthResponse>> {
+        return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/verify-otp`, request);
     }
 
     storeToken(token: string) {

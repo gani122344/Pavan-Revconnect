@@ -119,14 +119,23 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getFollowerGrowth(int days) {
-        long currentFollowers = connectionRepository.countByFollowingIdAndStatus(
-                authService.getCurrentUser().getId(), org.revature.revconnect.enums.ConnectionStatus.ACCEPTED);
+        User currentUser = authService.getCurrentUser();
+        Long userId = currentUser.getId();
+        LocalDate today = LocalDate.now();
+        LocalDate accountCreated = currentUser.getCreatedAt() != null
+                ? currentUser.getCreatedAt().toLocalDate() : today;
+        LocalDate startDate = today.minusDays(days - 1);
+        if (startDate.isBefore(accountCreated)) {
+            startDate = accountCreated;
+        }
+
         List<Map<String, Object>> growth = new ArrayList<>();
-        for (int i = days - 1; i >= 0; i--) {
-            LocalDate date = LocalDate.now().minusDays(i);
+        for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
+            LocalDateTime endOfDay = date.atTime(23, 59, 59);
+            long followers = connectionRepository.countFollowersAcceptedBefore(userId, endOfDay);
             Map<String, Object> row = new HashMap<>();
             row.put("date", date);
-            row.put("followers", currentFollowers);
+            row.put("followers", followers);
             growth.add(row);
         }
         return growth;

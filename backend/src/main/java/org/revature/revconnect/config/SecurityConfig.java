@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/music/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/push/vapid-key").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/ai/health").permitAll()
                         // All other requests require authentication
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())

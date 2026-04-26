@@ -62,6 +62,10 @@ public class JwtTokenProvider {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    public Claims extractAllClaimsPublic(String token) {
+        return extractAllClaims(token);
+    }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())

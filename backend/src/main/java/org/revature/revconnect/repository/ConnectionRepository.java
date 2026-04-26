@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +48,9 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
 
     @Query("SELECT c.follower.id FROM Connection c WHERE c.following.id = :userId AND c.status = 'ACCEPTED'")
     List<Long> findFollowerUserIds(@Param("userId") Long userId);
+
+    @Query("SELECT COUNT(c) FROM Connection c WHERE c.following.id = :userId AND c.status = 'ACCEPTED' AND c.updatedAt <= :before")
+    long countFollowersAcceptedBefore(@Param("userId") Long userId, @Param("before") LocalDateTime before);
 
     @Query("SELECT c FROM Connection c WHERE ((c.follower.id = :userId AND c.following.id = :otherUserId) OR " +
             "(c.follower.id = :otherUserId AND c.following.id = :userId))")

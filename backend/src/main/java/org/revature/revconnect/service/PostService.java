@@ -18,6 +18,9 @@ import org.revature.revconnect.repository.LikeRepository;
 import org.revature.revconnect.repository.BookmarkRepository;
 import org.revature.revconnect.repository.PostAnalyticsRepository;
 import org.revature.revconnect.repository.CommentLikeRepository;
+import org.revature.revconnect.repository.PostViewerRepository;
+import org.revature.revconnect.repository.ShareRepository;
+import org.revature.revconnect.repository.PostPromotionRepository;
 import org.revature.revconnect.model.Comment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +57,9 @@ public class PostService {
     private final BookmarkRepository bookmarkRepository;
     private final PostAnalyticsRepository postAnalyticsRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final PostViewerRepository postViewerRepository;
+    private final ShareRepository shareRepository;
+    private final PostPromotionRepository postPromotionRepository;
     private static final ScheduledExecutorService POST_SCHEDULER = Executors.newSingleThreadScheduledExecutor();
     private static final AtomicLong SCHEDULE_ID = new AtomicLong(1);
     private static final Map<Long, Map<String, Object>> SCHEDULED_POSTS = new ConcurrentHashMap<>();
@@ -204,7 +210,16 @@ public class PostService {
         // 5. Clean up Analytics
         postAnalyticsRepository.deleteByPostId(postId);
 
-        // 6. Finally delete the post
+        // 6. Clean up Post Viewers
+        postViewerRepository.deleteByPostId(postId);
+
+        // 7. Clean up Shares
+        shareRepository.deleteByPostId(postId);
+
+        // 8. Clean up Post Promotions
+        postPromotionRepository.deleteByPostId(postId);
+
+        // 9. Finally delete the post
         postRepository.delete(post);
         log.info("Post deleted successfully: {}", postId);
     }
